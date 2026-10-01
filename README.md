@@ -65,12 +65,40 @@ cannot produce a packet. Evidence names must be non-empty and unique, and eviden
 present, must match the packet revision. Paths
 must be non-empty, slash-separated repository paths without `.` or `..` segments.
 
+For a multi-source handoff, create explicit evidence receipts and seal them with a portable
+provenance packet:
+
+```bash
+forgeyard receipt ./artifacts/demo-001.json \
+  --name tests --path tests/test_change.py \
+  --output ./artifacts/tests.receipt.json
+forgeyard receipt ./artifacts/demo-001.json \
+  --name diff --path src/change.py \
+  --output ./artifacts/diff.receipt.json
+forgeyard packet ./artifacts/demo-001.json \
+  --receipt ./artifacts/tests.receipt.json \
+  --receipt ./artifacts/diff.receipt.json \
+  --source-root . --revision abc123 \
+  --path src/change.py --path tests/test_change.py \
+  --output ./artifacts/review.provenance.json
+forgeyard verify-packet ./artifacts/review.provenance.json --source-root .
+```
+
+`forgeyard-provenance-packet/v1` embeds the exact record and receipt bytes, binds every receipt to
+the task record and revision, and stores SHA-256 seals for each changed source file. Verification
+is fail-closed: a missing or changed source, malformed receipt, receipt mismatch, or unknown live
+source root cannot produce an `ok` result. The packet remains portable for transport and inspection,
+but a reviewer must provide the live `--source-root` to turn its embedded seals into a fresh result.
+The packet contains task and evidence details supplied by the caller; do not put secrets in records.
+
 ## Design boundaries
 
 - The core does not call a model provider or execute shell commands.
 - Evidence is explicit and tied to an optional source revision.
 - Failed evidence blocks review readiness.
 - The record is JSON so other agents and CI systems can consume it without scraping prose.
+- Evidence receipts are explicit, source-bound, and revision-bound; a provenance packet cannot
+  silently substitute a different receipt or source tree.
 - Later work will add isolated worktrees and bounded command execution behind these contracts.
 
 The second slice now admits a worktree plan without mutating anything:
@@ -92,8 +120,9 @@ run an agent, alter the source checkout, or claim that the resulting task is tes
 
 ## Status
 
-This is an early public foundation. Worktree isolation, command capture, resume, review packets,
-and cleanup safety are planned vertical slices. They are not represented as implemented here.
+This is an early public foundation. Worktree isolation, command capture, resume, and cleanup safety
+remain planned vertical slices. Review packets and the provenance packet are local review inputs;
+they are not merge, deployment, or runtime verification claims.
 
 ## Provenance
 

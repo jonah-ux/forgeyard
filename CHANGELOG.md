@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — portable provenance packets (unreleased)
+
+- Added explicit `forgeyard-evidence-receipt/v1` records bound to task evidence and source paths.
+- Added `forgeyard-provenance-packet/v1` with embedded record/receipt bytes, source SHA-256 seals,
+  revision binding, canonical packet integrity, and fail-closed live-source freshness verification.
+- Added CLI `receipt`, `packet`, and `verify-packet` commands without changing planned worktree or
+  resume boundaries.
+
 ## 0.2.6 — guided review demo
 
 - Add a zero-setup `forgeyard demo` walkthrough that creates, verifies, and packets a synthetic record in a temporary directory.
@@ -8,7 +16,6 @@
 ## 0.2.5 — evidence identity contract
 
 - Reject empty or duplicate evidence names before a task record can become reviewable.
-
 ## 0.2.4 — revision provenance contract
 
 - Reject review packets whose declared revision disagrees with passing evidence revisions.

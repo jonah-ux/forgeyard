@@ -1,8 +1,24 @@
+import json
 from pathlib import Path
 import subprocess
 
 from forgeyard.cli import main
-from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, build_review_packet, create_worktree, plan_worktree, verify_record, write_record
+from forgeyard.core import (
+    Evidence,
+    EvidenceStatus,
+    TaskRecord,
+    TaskStatus,
+    WorktreeError,
+    build_provenance_packet,
+    build_review_packet,
+    create_worktree,
+    plan_worktree,
+    verify_provenance_packet,
+    verify_record,
+    write_evidence_receipt,
+    write_provenance_packet,
+    write_record,
+)
 
 
 
@@ -130,6 +146,126 @@ def test_review_packet_digest_pin_rejects_changed_record(tmp_path: Path):
         assert "digest mismatch" in str(exc)
     else:
         raise AssertionError("tampered record passed the review digest pin")
+
+
+def _write_provenance_fixture(tmp_path: Path) -> tuple[Path, Path, list[Path], str]:
+    source_root = tmp_path / "repo"
+    (source_root / "src").mkdir(parents=True)
+    (source_root / "tests").mkdir()
+    (source_root / "src" / "app.py").write_text("print('app')\n", encoding="utf-8")
+    (source_root / "tests" / "test_app.py").write_text("def test_app(): pass\n", encoding="utf-8")
+    revision = "abc123"
+    record = TaskRecord("task-provenance", "fixture-repo", "ship the fixture")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "pytest -q -> 1 passed", revision))
+    record.add_evidence(Evidence("diff", EvidenceStatus.PASS, "clean diff", revision))
+    record.finalize()
+    record_path = tmp_path / "task.json"
+    write_record(record, record_path)
+    receipt_paths: list[Path] = []
+    for evidence_name, paths in (
+        ("tests", ["tests/test_app.py"]),
+        ("diff", ["src/app.py"]),
+    ):
+        receipt_path = tmp_path / f"{evidence_name}.receipt.json"
+        assert write_evidence_receipt(record_path, evidence_name, paths, receipt_path)
+        receipt_paths.append(receipt_path)
+    return source_root, record_path, receipt_paths, revision
+
+
+def test_provenance_packet_embeds_records_receipts_and_source_seals(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    packet_path = tmp_path / "review.provenance.json"
+    digest = write_provenance_packet(
+        record_path,
+        receipt_paths,
+        source_root,
+        revision,
+        ["src/app.py", "tests/test_app.py"],
+        packet_path,
+    )
+    packet = build_provenance_packet(record_path, receipt_paths, source_root, revision, ["src/app.py", "tests/test_app.py"])
+    assert digest == packet["packet_sha256"]
+    assert packet["schema"] == "forgeyard-provenance-packet/v1"
+    assert packet["record"]["raw"]
+    assert len(packet["receipts"]) == 2
+    verified = verify_provenance_packet(packet_path, source_root)
+    assert verified["ok"] is True
+    assert verified["fresh"] is True
+    assert verified["freshness"] == "matched"
+    assert verified["reviewable"] is True
+
+
+def test_provenance_packet_fails_closed_on_source_drift(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    packet_path = tmp_path / "review.provenance.json"
+    write_provenance_packet(record_path, receipt_paths, source_root, revision, ["src/app.py", "tests/test_app.py"], packet_path)
+    (source_root / "src" / "app.py").write_text("print('changed')\n", encoding="utf-8")
+    verified = verify_provenance_packet(packet_path, source_root)
+    assert verified["ok"] is False
+    assert verified["fresh"] is False
+    assert any("source bytes changed" in error for error in verified["errors"])
+
+
+def test_provenance_packet_requires_live_source_root(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    packet_path = tmp_path / "review.provenance.json"
+    write_provenance_packet(record_path, receipt_paths, source_root, revision, ["src/app.py", "tests/test_app.py"], packet_path)
+    verified = verify_provenance_packet(packet_path)
+    assert verified["freshness"] == "unknown"
+    assert verified["fresh"] is False
+    assert verified["ok"] is False
+
+
+def test_provenance_packet_is_portable_with_relocated_source_root(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    packet_path = tmp_path / "review.provenance.json"
+    write_provenance_packet(record_path, receipt_paths, source_root, revision, ["src/app.py", "tests/test_app.py"], packet_path)
+    relocated_root = tmp_path / "relocated" / "repo"
+    relocated_root.parent.mkdir()
+    (relocated_root / "src").mkdir(parents=True)
+    (relocated_root / "tests").mkdir()
+    for relative in ("src/app.py", "tests/test_app.py"):
+        (relocated_root / relative).write_bytes((source_root / relative).read_bytes())
+    relocated_packet = relocated_root.parent / "review.provenance.json"
+    relocated_packet.write_bytes(packet_path.read_bytes())
+    verified = verify_provenance_packet(relocated_packet, relocated_root)
+    assert verified["ok"] is True
+    assert verified["freshness"] == "matched"
+
+
+def test_provenance_packet_rejects_receipt_binding_mismatch(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    payload = json.loads(receipt_paths[0].read_text(encoding="utf-8"))
+    payload["detail"] = "different run"
+    receipt_paths[0].write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    try:
+        build_provenance_packet(record_path, receipt_paths, source_root, revision, ["src/app.py", "tests/test_app.py"])
+    except ValueError as exc:
+        assert "does not match task record" in str(exc) or "does not match" in str(exc)
+    else:
+        raise AssertionError("unbound evidence receipt was accepted")
+
+
+def test_provenance_packet_rejects_symlink_source_and_preserves_output(tmp_path: Path):
+    source_root, record_path, receipt_paths, revision = _write_provenance_fixture(tmp_path)
+    link = source_root / "src" / "alias.py"
+    link.symlink_to(source_root / "src" / "app.py")
+    output = tmp_path / "review.provenance.json"
+    output.write_text("existing\n", encoding="utf-8")
+    try:
+        write_provenance_packet(
+            record_path,
+            receipt_paths,
+            source_root,
+            revision,
+            ["src/alias.py", "src/app.py", "tests/test_app.py"],
+            output,
+        )
+    except ValueError as exc:
+        assert "symlink" in str(exc)
+    else:
+        raise AssertionError("symlink source was accepted")
+    assert output.read_text(encoding="utf-8") == "existing\n"
 
 
 def test_worktree_plan_refuses_destination_inside_source(tmp_path: Path):
