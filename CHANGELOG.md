@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 — review integrity release
+
+- Published digest-pinned review packet construction and tamper rejection in the installable CLI.
+
 ## 0.2.0 — review integrity
 
 - Added digest-pinned record verification to the review command.
