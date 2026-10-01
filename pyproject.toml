@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forgeyard"
-version = "0.2.5"
+version = "0.2.6"
 description = "Reviewable, reproducible execution records for coding-agent work"
 readme = "README.md"
 requires-python = ">=3.11"
