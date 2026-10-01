@@ -30,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     create_worktree_cmd.add_argument("--revision", default="HEAD")
     verify = sub.add_parser("verify", help="verify a task evidence record")
     verify.add_argument("record", type=Path)
+    verify.add_argument("--sha256", help="require the record to match this SHA-256 digest")
     review = sub.add_parser("review", help="build a review packet from a verified record")
     review.add_argument("record", type=Path)
     review.add_argument("--revision", required=True)
@@ -75,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "verify":
         try:
-            print(json.dumps(verify_record(args.record), sort_keys=True))
+            print(json.dumps(verify_record(args.record, args.sha256), sort_keys=True))
         except ValueError as exc:
             print(json.dumps({"schema": "forgeyard-record-verify/v1", "status": "invalid", "error": str(exc)}))
             return 2
