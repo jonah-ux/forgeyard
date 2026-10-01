@@ -140,7 +140,14 @@ def build_review_packet(record: TaskRecord, revision: str, changed_paths: list[s
 
     if not record.ready_for_review():
         raise ValueError("review packet requires a record with only passing evidence")
-    if not revision or any(not path or path.startswith("/") for path in changed_paths):
+    if not revision or not changed_paths or any(
+        not isinstance(path, str)
+        or not path
+        or path.startswith(("/", "\\"))
+        or "\\" in path
+        or any(part in ("", ".", "..") for part in path.split("/"))
+        for path in changed_paths
+    ):
         raise ValueError("review packet requires a revision and repository-relative changed paths")
     return {
         "schema": "forgeyard-review-packet/v1",

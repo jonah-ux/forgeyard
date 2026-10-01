@@ -66,6 +66,19 @@ def test_review_packet_refuses_blocked_record():
         raise AssertionError("blocked evidence produced a review packet")
 
 
+def test_review_packet_refuses_ambiguous_or_traversal_paths():
+    record = TaskRecord("task-paths", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))
+    record.finalize()
+    for paths in ([], ["../secret.txt"], ["src//change.py"], ["src\\change.py"]):
+        try:
+            build_review_packet(record, "abc123", paths)
+        except ValueError as exc:
+            assert "repository-relative" in str(exc)
+        else:
+            raise AssertionError(f"unsafe changed paths were accepted: {paths!r}")
+
+
 def test_review_packet_digest_pin_rejects_changed_record(tmp_path: Path):
     record = TaskRecord("task-5", "fixture-repo", "review the change")
     record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))
