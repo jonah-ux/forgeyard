@@ -24,3 +24,8 @@ This makes the packet portable for transport while keeping review admission fail
 
 The packet never executes commands, resumes work, merges code, or claims deployment. Worktree
 creation and future resume adapters remain separate planned boundaries.
+
+
+## Workbench
+
+The static `docs/workbench` page is a presentation and interaction layer over the same bounded contracts. Its synthetic reports are intentionally local; the CLI and provenance packet remain authoritative for real records.

@@ -145,3 +145,10 @@ they are not merge, deployment, or runtime verification claims.
 This repository is an independent public implementation of general patterns learned while building
 automation and agent tooling. It contains no employer source, customer data, credentials, private
 paths, production logs, or proprietary operating policy. See `PROVENANCE.md` for the boundary.
+
+## Interactive flagship
+
+Open the [Forgeyard Workbench](https://jonah-ux.github.io/forgeyard/) to run the
+synthetic review flow in a browser: load specialist reports, compose a bounded
+record, and trigger the tamper refusal. The page is static and local-first; it
+contains no credentials, network calls, customer data, or hidden provider state.
