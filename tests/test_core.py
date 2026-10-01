@@ -39,7 +39,9 @@ def test_worktree_plan_is_argument_safe(tmp_path: Path):
     (source / ".git").mkdir(parents=True)
     plan = plan_worktree(source, tmp_path / "task", "main")
     command = plan.command()
-    assert command[0:5] == ["git", "-C", str(source), "worktree", "add"]
+    assert command[0:2] == ["git", "-C"]
+    assert Path(command[2]).resolve() == source.resolve()
+    assert command[3:5] == ["worktree", "add"]
     assert command[-1] == "main"
     assert "--detach" in command
     assert Path(command[6]).resolve() == (tmp_path / "task").resolve()
