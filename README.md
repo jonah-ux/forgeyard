@@ -29,6 +29,15 @@ The command prints JSON containing the record path, its SHA-256 digest, and `rea
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.
 
+Verify a saved record before handing it to a reviewer:
+
+```bash
+forgeyard verify ./artifacts/demo-001.json
+```
+
+The verifier rejects malformed JSON and contradictory status/evidence combinations. It reports a
+`forgeyard-record-verify/v1` document and never upgrades a blocked record to reviewable.
+
 ## Design boundaries
 
 - The core does not call a model provider or execute shell commands.

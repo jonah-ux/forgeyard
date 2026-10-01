@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from . import __version__
-from .core import Evidence, EvidenceStatus, TaskRecord, create_worktree, plan_worktree, write_record
+from .core import Evidence, EvidenceStatus, TaskRecord, create_worktree, plan_worktree, verify_record, write_record
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,6 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
     create_worktree_cmd.add_argument("--source", type=Path, required=True)
     create_worktree_cmd.add_argument("--destination", type=Path, required=True)
     create_worktree_cmd.add_argument("--revision", default="HEAD")
+    verify = sub.add_parser("verify", help="verify a task evidence record")
+    verify.add_argument("record", type=Path)
     return parser
 
 
@@ -66,6 +68,13 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": "blocked", "error": str(exc)}))
             return 2
         print(json.dumps({"status": "created", "source": str(plan.source), "destination": str(plan.destination), "revision": plan.revision}))
+        return 0
+    if args.command == "verify":
+        try:
+            print(json.dumps(verify_record(args.record), sort_keys=True))
+        except ValueError as exc:
+            print(json.dumps({"schema": "forgeyard-record-verify/v1", "status": "invalid", "error": str(exc)}))
+            return 2
         return 0
     return 2
 

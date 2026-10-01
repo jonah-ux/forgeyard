@@ -88,6 +88,48 @@ class WorktreeError(ValueError):
     """A worktree request cannot be safely admitted."""
 
 
+def read_record(source: Path) -> TaskRecord:
+    """Load a task record and reject malformed or contradictory state."""
+
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        evidence = [
+            Evidence(
+                name=str(item["name"]),
+                status=EvidenceStatus(item["status"]),
+                detail=str(item["detail"]),
+                revision=item.get("revision"),
+            )
+            for item in payload["evidence"]
+        ]
+        record = TaskRecord(
+            task_id=str(payload["task_id"]),
+            repository=str(payload["repository"]),
+            request=str(payload["request"]),
+            status=TaskStatus(payload["status"]),
+            evidence=evidence,
+            artifacts=[str(value) for value in payload.get("artifacts", [])],
+        )
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid Forgeyard record: {source}") from exc
+    expected = TaskStatus.READY_FOR_REVIEW if record.ready_for_review() else TaskStatus.BLOCKED
+    if record.status not in {expected, TaskStatus.CREATED, TaskStatus.RUNNING}:
+        raise ValueError(f"record status contradicts evidence: {record.status.value} vs {expected.value}")
+    return record
+
+
+def verify_record(source: Path) -> dict[str, Any]:
+    record = read_record(source)
+    return {
+        "schema": "forgeyard-record-verify/v1",
+        "record": str(source),
+        "task_id": record.task_id,
+        "status": record.status.value,
+        "evidence_count": len(record.evidence),
+        "reviewable": record.ready_for_review(),
+    }
+
+
 @dataclass(frozen=True)
 class WorktreePlan:
     source: Path

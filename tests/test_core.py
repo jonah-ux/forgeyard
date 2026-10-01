@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 
-from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, create_worktree, plan_worktree, write_record
+from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, create_worktree, plan_worktree, verify_record, write_record
 
 
 def test_failed_evidence_blocks_completion():
@@ -22,6 +22,19 @@ def test_all_pass_evidence_produces_reviewable_record(tmp_path: Path):
     assert record.status is TaskStatus.READY_FOR_REVIEW
     assert len(digest) == 64
     assert '"status": "ready_for_review"' in output.read_text()
+    verified = verify_record(output)
+    assert verified["reviewable"] is True
+
+
+def test_record_verifier_rejects_contradictory_status(tmp_path: Path):
+    output = tmp_path / "blocked.json"
+    output.write_text('{"task_id":"x","repository":"r","request":"q","status":"complete","evidence":[]}', encoding="utf-8")
+    try:
+        verify_record(output)
+    except ValueError as exc:
+        assert "contradicts" in str(exc)
+    else:
+        raise AssertionError("contradictory record was accepted")
 
 
 def test_worktree_plan_refuses_destination_inside_source(tmp_path: Path):
