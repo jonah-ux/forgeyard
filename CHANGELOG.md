@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 — release checksum portability
+
+- Generate release checksums from artifact basenames so downloaded GitHub assets verify without path rewriting.
+
 ## 0.2.1 — review integrity release
 
 - Published digest-pinned review packet construction and tamper rejection in the installable CLI.
