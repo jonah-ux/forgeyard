@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Forgeyard Workbench: compose specialist reports into reviewable evidence and see fail-closed tamper behavior.">
+  <title>Forgeyard Workbench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="eyebrow">FORGEYARD / WORKBENCH</div>
+      <h1>Make agent work reviewable.</h1>
+      <p class="lede">Load bounded specialist reports, compose a review record, then change one byte and watch the integrity boundary refuse it.</p>
+      <div class="actions">
+        <button id="load-demo" class="primary">Load synthetic demo</button>
+        <button id="compose" disabled>Compose review record</button>
+        <button id="tamper" disabled>Simulate tamper</button>
+        <button id="reset" class="quiet">Reset</button>
+      </div>
+    </header>
+
+    <section class="status-grid" aria-label="Workbench status">
+      <article class="status-card"><span class="label">SPECIALISTS</span><strong id="specialist-count">0</strong><span id="specialist-state">Waiting for fixtures</span></article>
+      <article class="status-card"><span class="label">DECISION</span><strong id="decision">—</strong><span id="decision-detail">No record composed</span></article>
+      <article class="status-card"><span class="label">INTEGRITY</span><strong id="integrity">—</strong><span id="integrity-detail">No digest calculated</span></article>
+    </section>
+
+    <section class="workspace">
+      <div class="panel reports-panel">
+        <div class="panel-head"><div><span class="kicker">01 / INPUT</span><h2>Specialist reports</h2></div><span class="badge" id="input-badge">EMPTY</span></div>
+        <div id="reports" class="report-list"><div class="empty">The synthetic fixture stays local to this page.</div></div>
+      </div>
+      <div class="panel record-panel">
+        <div class="panel-head"><div><span class="kicker">02 / DECISION</span><h2>Review record</h2></div><span class="badge" id="record-badge">NOT READY</span></div>
+        <pre id="record" class="json-view" aria-live="polite">Load the demo to create a bounded record.</pre>
+      </div>
+    </section>
+
+    <section class="boundary" aria-label="Evidence boundary">
+      <div><span class="kicker">03 / BOUNDARY</span><h2>What this proves</h2></div>
+      <div class="boundary-copy"><p><b>Contract shape:</b> MCP Doctor reports whether the tool interface is valid.</p><p><b>Integrity:</b> Agent Proof-style evidence is bound to exact bytes and a digest.</p><p><b>Review readiness:</b> Forgeyard records whether supplied evidence is ready for a human decision.</p><p class="muted">A green result is not a deployment claim. The workbench is synthetic and contains no private or customer data.</p></div>
+    </section>
+
+    <footer><a href="https://github.com/jonah-ux/forgeyard">Forgeyard source</a><span>·</span><a href="https://github.com/jonah-ux/forgeyard#readme">CLI contract</a><span>·</span><a href="https://github.com/jonah-ux/jonah-ux">Jonah's portfolio</a></footer>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>
