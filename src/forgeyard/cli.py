@@ -12,6 +12,8 @@ from .core import (
     Evidence,
     EvidenceStatus,
     TaskRecord,
+    TaskStatus,
+    evidence_from_report,
     build_review_packet,
     create_worktree,
     plan_worktree,
@@ -34,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--request", required=True)
     create.add_argument("--output", type=Path, required=True)
     create.add_argument("--evidence", action="append", default=[], metavar="NAME=STATUS:DETAIL")
+    compose = sub.add_parser("compose", help="compose specialist JSON reports into a review record")
+    compose.add_argument("--task-id", required=True)
+    compose.add_argument("--repository", required=True)
+    compose.add_argument("--request", required=True)
+    compose.add_argument("--input", action="append", required=True, metavar="NAME=REPORT.json")
+    compose.add_argument("--revision")
+    compose.add_argument("--output", type=Path, required=True)
     worktree = sub.add_parser("plan-worktree", help="validate an isolated worktree request")
     worktree.add_argument("--source", type=Path, required=True)
     worktree.add_argument("--destination", type=Path, required=True)
@@ -80,6 +89,21 @@ def parse_evidence(raw: str) -> Evidence:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "compose":
+        record = TaskRecord(args.task_id, args.repository, args.request)
+        try:
+            for raw in args.input:
+                name, separator, path = raw.partition("=")
+                if not separator or not name or not path:
+                    raise ValueError("specialist input must use NAME=REPORT.json")
+                record.add_evidence(evidence_from_report(Path(path), name, args.revision))
+            record.finalize()
+            digest = write_record(record, args.output)
+        except (OSError, ValueError) as exc:
+            print(json.dumps({"schema": "forgeyard-compose/v1", "status": "invalid", "error": str(exc)}))
+            return 2
+        print(json.dumps({"schema": "forgeyard-compose/v1", "record": str(args.output), "sha256": digest, "status": record.status.value}, sort_keys=True))
+        return 0 if record.status is TaskStatus.READY_FOR_REVIEW else 2
     if args.command == "create":
         record = TaskRecord(args.task_id, args.repository, args.request)
         for raw in args.evidence:

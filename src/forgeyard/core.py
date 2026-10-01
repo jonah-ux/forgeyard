@@ -89,6 +89,29 @@ def write_record(record: TaskRecord, destination: Path) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def evidence_from_report(source: Path, name: str, revision: str | None = None) -> Evidence:
+    """Convert a specialist JSON report into bounded Forgeyard evidence.
+
+    Reports must expose a boolean ``ok`` field. Only the schema label and boolean
+    result enter the task record; raw report details stay in the source file.
+    """
+
+    if not name.strip():
+        raise ValueError("report evidence name must be non-empty")
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid specialist report: {source}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
+        raise ValueError(f"specialist report must contain boolean ok: {source}")
+    schema = payload.get("schema", "unknown")
+    if not isinstance(schema, str) or not schema:
+        schema = "unknown"
+    status = EvidenceStatus.PASS if payload["ok"] else EvidenceStatus.FAIL
+    detail = f"schema={schema}; ok={str(payload['ok']).lower()}"
+    return Evidence(name=name, status=status, detail=detail, revision=revision)
+
+
 class WorktreeError(ValueError):
     """A worktree request cannot be safely admitted."""
 

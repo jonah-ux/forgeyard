@@ -34,6 +34,22 @@ forgeyard demo
 The command emits one `forgeyard-demo/v1` JSON document and uses a temporary directory, so it
 leaves no project files behind.
 
+Compose bounded reports from specialist tools such as MCP Doctor or Agent Proof without copying their raw payloads into the task record:
+
+```bash
+forgeyard compose \
+  --task-id mcp-check-001 \
+  --repository fixture-repo \
+  --request "review MCP contract" \
+  --input contract=./artifacts/mcp-doctor.json \
+  --input proof=./artifacts/agent-proof.json \
+  --output ./artifacts/review-record.json
+```
+
+Each input must be a JSON object with a boolean `ok` field. Forgeyard stores only the input name,
+its schema label, the boolean result, and the optional revision; the specialist payload remains in
+its own file. A false result blocks the record, and malformed or missing `ok` values are rejected.
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.

@@ -12,6 +12,7 @@ from forgeyard.core import (
     build_provenance_packet,
     build_review_packet,
     create_worktree,
+    evidence_from_report,
     plan_worktree,
     verify_provenance_packet,
     verify_record,
@@ -28,6 +29,35 @@ def test_demo_command_runs_the_reviewable_walkthrough(capsys):
     assert '"schema": "forgeyard-demo/v1"' in output
     assert '"reviewable": true' in output
     assert '"record_sha256"' in output
+
+
+def test_compose_converts_specialist_reports_without_copying_payload(tmp_path: Path):
+    report = tmp_path / "mcp.json"
+    report.write_text(json.dumps({"schema": "mcp-doctor/v1", "ok": True, "findings": [{"secret": "never copy"}]}), encoding="utf-8")
+    evidence = evidence_from_report(report, "contract", "abc123")
+    assert evidence.status is EvidenceStatus.PASS
+    assert evidence.detail == "schema=mcp-doctor/v1; ok=true"
+    assert "never copy" not in evidence.detail
+
+
+def test_compose_rejects_reports_without_boolean_result(tmp_path: Path):
+    report = tmp_path / "bad.json"
+    report.write_text('{"schema":"unknown"}', encoding="utf-8")
+    try:
+        evidence_from_report(report, "contract")
+    except ValueError as exc:
+        assert "boolean ok" in str(exc)
+    else:
+        raise AssertionError("unbounded specialist report was accepted")
+
+
+def test_compose_command_writes_reviewable_record(tmp_path: Path, capsys):
+    report = tmp_path / "doctor.json"
+    output = tmp_path / "record.json"
+    report.write_text(json.dumps({"schema": "mcp-doctor/v1", "ok": True}), encoding="utf-8")
+    assert main(["compose", "--task-id", "compose-1", "--repository", "fixture", "--request", "check", "--input", f"contract={report}", "--output", str(output)]) == 0
+    assert '"status": "ready_for_review"' in capsys.readouterr().out
+    assert json.loads(output.read_text(encoding="utf-8"))["evidence"][0]["detail"] == "schema=mcp-doctor/v1; ok=true"
 
 def test_failed_evidence_blocks_completion():
     record = TaskRecord("task-1", "fixture-repo", "add a feature")
