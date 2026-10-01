@@ -140,6 +140,9 @@ def build_review_packet(record: TaskRecord, revision: str, changed_paths: list[s
 
     if not record.ready_for_review():
         raise ValueError("review packet requires a record with only passing evidence")
+    evidence_revisions = {item.revision for item in record.evidence if item.revision}
+    if evidence_revisions and evidence_revisions != {revision}:
+        raise ValueError("review packet revision does not match evidence revisions")
     if not revision or not changed_paths or any(
         not isinstance(path, str)
         or not path

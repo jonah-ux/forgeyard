@@ -79,6 +79,18 @@ def test_review_packet_refuses_ambiguous_or_traversal_paths():
             raise AssertionError(f"unsafe changed paths were accepted: {paths!r}")
 
 
+def test_review_packet_refuses_revision_mismatch():
+    record = TaskRecord("task-revision", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "evidence-rev"))
+    record.finalize()
+    try:
+        build_review_packet(record, "different-rev", ["src/change.py"])
+    except ValueError as exc:
+        assert "does not match evidence revisions" in str(exc)
+    else:
+        raise AssertionError("revision mismatch produced a review packet")
+
+
 def test_review_packet_digest_pin_rejects_changed_record(tmp_path: Path):
     record = TaskRecord("task-5", "fixture-repo", "review the change")
     record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))

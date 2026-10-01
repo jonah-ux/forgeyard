@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4 — revision provenance contract
+
+- Reject review packets whose declared revision disagrees with passing evidence revisions.
+
 ## 0.2.3 — path contract hardening
 
 - Reject empty, ambiguous, absolute, and traversal-style changed paths in review packets.
