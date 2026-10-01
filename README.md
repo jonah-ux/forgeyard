@@ -45,7 +45,14 @@ forgeyard plan-worktree --source ./fixture-repo --destination /tmp/forgeyard-tas
 
 The planner canonicalizes paths, refuses a destination inside the source checkout, refuses an
 existing destination, and emits an argument list rather than a shell string. Actual creation is a
-separate bounded operation and is not performed by the planner.
+separate bounded operation:
+
+```bash
+forgeyard create-worktree --source ./fixture-repo --destination /tmp/forgeyard-task --revision HEAD
+```
+
+Creation uses `git worktree add --detach` with an argument list and a bounded timeout. It does not
+run an agent, alter the source checkout, or claim that the resulting task is tested or reviewed.
 
 ## Status
 

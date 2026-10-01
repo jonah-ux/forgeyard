@@ -1,6 +1,7 @@
 from pathlib import Path
+import subprocess
 
-from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, plan_worktree, write_record
+from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, create_worktree, plan_worktree, write_record
 
 
 def test_failed_evidence_blocks_completion():
@@ -45,3 +46,19 @@ def test_worktree_plan_is_argument_safe(tmp_path: Path):
     assert command[-1] == "main"
     assert "--detach" in command
     assert Path(command[6]).resolve() == (tmp_path / "task").resolve()
+
+
+def test_create_worktree_materializes_detached_checkout(tmp_path: Path):
+    source = tmp_path / "repo"
+    source.mkdir()
+    subprocess.run(["git", "init", "-q", str(source)], check=True)
+    subprocess.run(["git", "-C", str(source), "config", "user.email", "forgeyard@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(source), "config", "user.name", "Forgeyard Fixture"], check=True)
+    (source / "README.md").write_text("fixture\n")
+    subprocess.run(["git", "-C", str(source), "add", "README.md"], check=True)
+    subprocess.run(["git", "-C", str(source), "commit", "-qm", "fixture"], check=True)
+    destination = tmp_path / "worktree"
+    create_worktree(plan_worktree(source, destination))
+    assert (destination / "README.md").read_text() == "fixture\n"
+    result = subprocess.run(["git", "-C", str(destination), "symbolic-ref", "--quiet", "--short", "HEAD"], capture_output=True, text=True)
+    assert result.returncode != 0
