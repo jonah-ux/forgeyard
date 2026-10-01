@@ -8,7 +8,20 @@ from pathlib import Path
 import tempfile
 
 from . import __version__
-from .core import Evidence, EvidenceStatus, TaskRecord, build_review_packet, create_worktree, plan_worktree, read_record, verify_record, write_record
+from .core import (
+    Evidence,
+    EvidenceStatus,
+    TaskRecord,
+    build_review_packet,
+    create_worktree,
+    plan_worktree,
+    read_record,
+    verify_record,
+    verify_provenance_packet,
+    write_evidence_receipt,
+    write_record,
+    write_provenance_packet,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -38,6 +51,21 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--revision", required=True)
     review.add_argument("--path", action="append", required=True, dest="changed_paths")
     sub.add_parser("demo", help="run the offline evidence-to-review walkthrough")
+    receipt = sub.add_parser("receipt", help="write one source-bound evidence receipt")
+    receipt.add_argument("record", type=Path)
+    receipt.add_argument("--name", required=True)
+    receipt.add_argument("--path", action="append", required=True, dest="source_paths")
+    receipt.add_argument("--output", type=Path, required=True)
+    packet = sub.add_parser("packet", help="write a portable multi-source provenance packet")
+    packet.add_argument("record", type=Path)
+    packet.add_argument("--receipt", action="append", required=True, dest="receipts")
+    packet.add_argument("--source-root", type=Path, required=True)
+    packet.add_argument("--revision", required=True)
+    packet.add_argument("--path", action="append", required=True, dest="changed_paths")
+    packet.add_argument("--output", type=Path, required=True)
+    verify_packet = sub.add_parser("verify-packet", help="verify a portable provenance packet")
+    verify_packet.add_argument("packet", type=Path)
+    verify_packet.add_argument("--source-root", type=Path)
     return parser
 
 
@@ -107,6 +135,33 @@ def main(argv: list[str] | None = None) -> int:
             packet["record_sha256"] = verification["sha256"]
             print(json.dumps({"schema": "forgeyard-demo/v1", "verification": verification, "review_packet": packet}, sort_keys=True))
         return 0
+    if args.command == "receipt":
+        try:
+            digest = write_evidence_receipt(args.record, args.name, args.source_paths, args.output)
+        except (OSError, ValueError) as exc:
+            print(json.dumps({"schema": "forgeyard-evidence-receipt/v1", "status": "invalid", "error": str(exc)}))
+            return 2
+        print(json.dumps({"receipt": str(args.output), "sha256": digest, "status": "written"}, sort_keys=True))
+        return 0
+    if args.command == "packet":
+        try:
+            digest = write_provenance_packet(
+                args.record,
+                [Path(value) for value in args.receipts],
+                args.source_root,
+                args.revision,
+                args.changed_paths,
+                args.output,
+            )
+        except (OSError, ValueError) as exc:
+            print(json.dumps({"schema": "forgeyard-provenance-packet/v1", "status": "invalid", "error": str(exc)}))
+            return 2
+        print(json.dumps({"packet": str(args.output), "packet_sha256": digest, "status": "written"}, sort_keys=True))
+        return 0
+    if args.command == "verify-packet":
+        result = verify_provenance_packet(args.packet, args.source_root)
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result["ok"] else 1
     return 2
 
 
