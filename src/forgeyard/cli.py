@@ -43,3 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"record": str(args.output), "sha256": digest, "status": record.status.value}))
         return 0 if record.status.value == "ready_for_review" else 2
     return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
