@@ -9,8 +9,24 @@ description = "Reviewable, reproducible execution records for coding-agent work"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [{name = "Jonah Helland"}]
 dependencies = []
+keywords = ["ai-agents", "developer-tools", "automation", "reliability", "worktrees"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Version Control :: Git",
+]
+
+[project.urls]
+Homepage = "https://github.com/jonah-ux/forgeyard"
+Repository = "https://github.com/jonah-ux/forgeyard"
+Issues = "https://github.com/jonah-ux/forgeyard/issues"
 
 [project.scripts]
 forgeyard = "forgeyard.cli:main"
