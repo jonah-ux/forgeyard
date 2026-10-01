@@ -7,6 +7,7 @@ from enum import StrEnum
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 from typing import Any
 
 
@@ -81,3 +82,43 @@ def write_record(record: TaskRecord, destination: Path) -> str:
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(payload, encoding="utf-8")
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+class WorktreeError(ValueError):
+    """A worktree request cannot be safely admitted."""
+
+
+@dataclass(frozen=True)
+class WorktreePlan:
+    source: Path
+    destination: Path
+    revision: str
+
+    def command(self) -> list[str]:
+        return ["git", "-C", str(self.source), "worktree", "add", "--detach", str(self.destination), self.revision]
+
+
+def plan_worktree(source: Path, destination: Path, revision: str = "HEAD") -> WorktreePlan:
+    """Validate a worktree request without touching the filesystem."""
+
+    source = source.expanduser().resolve()
+    destination = destination.expanduser().resolve()
+    if not (source / ".git").exists() and not (source / "HEAD").exists():
+        raise WorktreeError(f"source is not a Git checkout: {source}")
+    if destination == source or source in destination.parents:
+        raise WorktreeError("destination must be outside the source checkout")
+    if destination.exists():
+        raise WorktreeError(f"destination already exists: {destination}")
+    if not revision or revision.startswith("-"):
+        raise WorktreeError("revision must be a non-empty Git revision")
+    return WorktreePlan(source, destination, revision)
+
+
+def create_worktree(plan: WorktreePlan, timeout: float = 20.0) -> None:
+    """Create one detached worktree with bounded, argument-safe Git execution."""
+
+    plan.destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        subprocess.run(plan.command(), check=True, capture_output=True, text=True, timeout=timeout)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise WorktreeError(f"worktree creation failed: {exc}") from exc

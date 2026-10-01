@@ -37,6 +37,16 @@ with status 2. A record is not a merge, deployment, or production verification c
 - The record is JSON so other agents and CI systems can consume it without scraping prose.
 - Later work will add isolated worktrees and bounded command execution behind these contracts.
 
+The second slice now admits a worktree plan without mutating anything:
+
+```bash
+forgeyard plan-worktree --source ./fixture-repo --destination /tmp/forgeyard-task --revision HEAD
+```
+
+The planner canonicalizes paths, refuses a destination inside the source checkout, refuses an
+existing destination, and emits an argument list rather than a shell string. Actual creation is a
+separate bounded operation and is not performed by the planner.
+
 ## Status
 
 This is an early public foundation. Worktree isolation, command capture, resume, review packets,

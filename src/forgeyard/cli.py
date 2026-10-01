@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from . import __version__
-from .core import Evidence, EvidenceStatus, TaskRecord, write_record
+from .core import Evidence, EvidenceStatus, TaskRecord, plan_worktree, write_record
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,6 +20,10 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--request", required=True)
     create.add_argument("--output", type=Path, required=True)
     create.add_argument("--evidence", action="append", default=[], metavar="NAME=STATUS:DETAIL")
+    worktree = sub.add_parser("plan-worktree", help="validate an isolated worktree request")
+    worktree.add_argument("--source", type=Path, required=True)
+    worktree.add_argument("--destination", type=Path, required=True)
+    worktree.add_argument("--revision", default="HEAD")
     return parser
 
 
@@ -42,6 +46,14 @@ def main(argv: list[str] | None = None) -> int:
         digest = write_record(record, args.output)
         print(json.dumps({"record": str(args.output), "sha256": digest, "status": record.status.value}))
         return 0 if record.status.value == "ready_for_review" else 2
+    if args.command == "plan-worktree":
+        try:
+            plan = plan_worktree(args.source, args.destination, args.revision)
+        except ValueError as exc:
+            print(json.dumps({"status": "blocked", "error": str(exc)}))
+            return 2
+        print(json.dumps({"status": "planned", "command": plan.command()}))
+        return 0
     return 2
 
 
