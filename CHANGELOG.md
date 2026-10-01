@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5 — evidence identity contract
+
+- Reject empty or duplicate evidence names before a task record can become reviewable.
+
 ## 0.2.4 — revision provenance contract
 
 - Reject review packets whose declared revision disagrees with passing evidence revisions.

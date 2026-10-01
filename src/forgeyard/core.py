@@ -52,6 +52,10 @@ class TaskRecord:
     artifacts: list[str] = field(default_factory=list)
 
     def add_evidence(self, evidence: Evidence) -> None:
+        if not evidence.name.strip():
+            raise ValueError("evidence name must be non-empty")
+        if any(item.name == evidence.name for item in self.evidence):
+            raise ValueError(f"duplicate evidence name: {evidence.name}")
         self.evidence.append(evidence)
         if evidence.status is EvidenceStatus.FAIL:
             self.status = TaskStatus.BLOCKED
@@ -110,6 +114,11 @@ def read_record(source: Path) -> TaskRecord:
             evidence=evidence,
             artifacts=[str(value) for value in payload.get("artifacts", [])],
         )
+        if any(not item.name.strip() for item in evidence):
+            raise ValueError("invalid Forgeyard record: evidence name must be non-empty")
+        names = [item.name for item in evidence]
+        if len(names) != len(set(names)):
+            raise ValueError("invalid Forgeyard record: duplicate evidence name")
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid Forgeyard record: {source}") from exc
     expected = TaskStatus.READY_FOR_REVIEW if record.ready_for_review() else TaskStatus.BLOCKED

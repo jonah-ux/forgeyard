@@ -52,7 +52,8 @@ The result is a `forgeyard-review-packet/v1` document containing the request, ex
 repository-relative changed paths, evidence, artifact references, and the verified record digest.
 Passing `--sha256` binds packet creation to the exact bytes produced by `create`; a tampered or
 substituted record is rejected before the packet is emitted. Unknown, skipped, or failed evidence
-cannot produce a packet. Evidence revisions, when present, must match the packet revision. Paths
+cannot produce a packet. Evidence names must be non-empty and unique, and evidence revisions, when
+present, must match the packet revision. Paths
 must be non-empty, slash-separated repository paths without `.` or `..` segments.
 
 ## Design boundaries

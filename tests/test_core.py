@@ -91,6 +91,23 @@ def test_review_packet_refuses_revision_mismatch():
         raise AssertionError("revision mismatch produced a review packet")
 
 
+def test_record_refuses_ambiguous_evidence_names():
+    record = TaskRecord("task-evidence", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed"))
+    try:
+        record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "also passed"))
+    except ValueError as exc:
+        assert "duplicate evidence name" in str(exc)
+    else:
+        raise AssertionError("duplicate evidence name was accepted")
+    try:
+        record.add_evidence(Evidence("  ", EvidenceStatus.PASS, "unnamed"))
+    except ValueError as exc:
+        assert "non-empty" in str(exc)
+    else:
+        raise AssertionError("empty evidence name was accepted")
+
+
 def test_review_packet_digest_pin_rejects_changed_record(tmp_path: Path):
     record = TaskRecord("task-5", "fixture-repo", "review the change")
     record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))
