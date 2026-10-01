@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 
-from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, create_worktree, plan_worktree, verify_record, write_record
+from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, build_review_packet, create_worktree, plan_worktree, verify_record, write_record
 
 
 def test_failed_evidence_blocks_completion():
@@ -35,6 +35,27 @@ def test_record_verifier_rejects_contradictory_status(tmp_path: Path):
         assert "contradicts" in str(exc)
     else:
         raise AssertionError("contradictory record was accepted")
+
+
+def test_review_packet_requires_passing_evidence():
+    record = TaskRecord("task-3", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))
+    record.finalize()
+    packet = build_review_packet(record, "abc123", ["src/change.py", "tests/test_change.py"])
+    assert packet["schema"] == "forgeyard-review-packet/v1"
+    assert packet["changed_paths"] == ["src/change.py", "tests/test_change.py"]
+
+
+def test_review_packet_refuses_blocked_record():
+    record = TaskRecord("task-4", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.UNKNOWN, "not run"))
+    record.finalize()
+    try:
+        build_review_packet(record, "abc123", ["src/change.py"])
+    except ValueError as exc:
+        assert "passing evidence" in str(exc)
+    else:
+        raise AssertionError("blocked evidence produced a review packet")
 
 
 def test_worktree_plan_refuses_destination_inside_source(tmp_path: Path):

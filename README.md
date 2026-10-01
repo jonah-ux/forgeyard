@@ -38,6 +38,19 @@ forgeyard verify ./artifacts/demo-001.json
 The verifier rejects malformed JSON and contradictory status/evidence combinations. It reports a
 `forgeyard-record-verify/v1` document and never upgrades a blocked record to reviewable.
 
+Build a reviewer handoff only from a verified, passing record:
+
+```bash
+forgeyard review ./artifacts/demo-001.json \
+  --revision abc123 \
+  --path src/change.py \
+  --path tests/test_change.py
+```
+
+The result is a `forgeyard-review-packet/v1` document containing the request, exact revision,
+repository-relative changed paths, evidence, and artifact references. Unknown, skipped, or failed
+evidence cannot produce a packet.
+
 ## Design boundaries
 
 - The core does not call a model provider or execute shell commands.

@@ -130,6 +130,26 @@ def verify_record(source: Path) -> dict[str, Any]:
     }
 
 
+def build_review_packet(record: TaskRecord, revision: str, changed_paths: list[str]) -> dict[str, Any]:
+    """Combine a reviewable record with the exact revision and changed paths."""
+
+    if not record.ready_for_review():
+        raise ValueError("review packet requires a record with only passing evidence")
+    if not revision or any(not path or path.startswith("/") for path in changed_paths):
+        raise ValueError("review packet requires a revision and repository-relative changed paths")
+    return {
+        "schema": "forgeyard-review-packet/v1",
+        "task_id": record.task_id,
+        "repository": record.repository,
+        "request": record.request,
+        "revision": revision,
+        "changed_paths": sorted(set(changed_paths)),
+        "evidence": [item.as_dict() for item in record.evidence],
+        "artifacts": list(record.artifacts),
+        "reviewable": True,
+    }
+
+
 @dataclass(frozen=True)
 class WorktreePlan:
     source: Path
