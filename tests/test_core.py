@@ -66,6 +66,21 @@ def test_review_packet_refuses_blocked_record():
         raise AssertionError("blocked evidence produced a review packet")
 
 
+def test_review_packet_digest_pin_rejects_changed_record(tmp_path: Path):
+    record = TaskRecord("task-5", "fixture-repo", "review the change")
+    record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "abc123"))
+    record.finalize()
+    output = tmp_path / "task.json"
+    digest = write_record(record, output)
+    output.write_text(output.read_text(encoding="utf-8").replace("review the change", "tampered request"), encoding="utf-8")
+    try:
+        verify_record(output, digest)
+    except ValueError as exc:
+        assert "digest mismatch" in str(exc)
+    else:
+        raise AssertionError("tampered record passed the review digest pin")
+
+
 def test_worktree_plan_refuses_destination_inside_source(tmp_path: Path):
     source = tmp_path / "repo"
     (source / ".git").mkdir(parents=True)

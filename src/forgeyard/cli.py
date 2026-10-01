@@ -33,6 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--sha256", help="require the record to match this SHA-256 digest")
     review = sub.add_parser("review", help="build a review packet from a verified record")
     review.add_argument("record", type=Path)
+    review.add_argument("--sha256", help="require the review packet to use this exact record digest")
     review.add_argument("--revision", required=True)
     review.add_argument("--path", action="append", required=True, dest="changed_paths")
     return parser
@@ -83,7 +84,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "review":
         try:
+            verification = verify_record(args.record, args.sha256)
             packet = build_review_packet(read_record(args.record), args.revision, args.changed_paths)
+            packet["record_sha256"] = verification["sha256"]
         except ValueError as exc:
             print(json.dumps({"schema": "forgeyard-review-packet/v1", "status": "invalid", "error": str(exc)}))
             return 2

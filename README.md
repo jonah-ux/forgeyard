@@ -42,14 +42,17 @@ Build a reviewer handoff only from a verified, passing record:
 
 ```bash
 forgeyard review ./artifacts/demo-001.json \
+  --sha256 <sha256-from-create> \
   --revision abc123 \
   --path src/change.py \
   --path tests/test_change.py
 ```
 
 The result is a `forgeyard-review-packet/v1` document containing the request, exact revision,
-repository-relative changed paths, evidence, and artifact references. Unknown, skipped, or failed
-evidence cannot produce a packet.
+repository-relative changed paths, evidence, artifact references, and the verified record digest.
+Passing `--sha256` binds packet creation to the exact bytes produced by `create`; a tampered or
+substituted record is rejected before the packet is emitted. Unknown, skipped, or failed evidence
+cannot produce a packet.
 
 ## Design boundaries
 
