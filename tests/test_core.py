@@ -24,6 +24,14 @@ def test_all_pass_evidence_produces_reviewable_record(tmp_path: Path):
     assert '"status": "ready_for_review"' in output.read_text()
     verified = verify_record(output)
     assert verified["reviewable"] is True
+    assert verified["sha256"] == digest
+    assert verify_record(output, digest)["sha256"] == digest
+    try:
+        verify_record(output, "0" * 64)
+    except ValueError as exc:
+        assert "digest mismatch" in str(exc)
+    else:
+        raise AssertionError("mismatched digest was accepted")
 
 
 def test_record_verifier_rejects_contradictory_status(tmp_path: Path):

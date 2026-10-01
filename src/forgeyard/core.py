@@ -118,11 +118,16 @@ def read_record(source: Path) -> TaskRecord:
     return record
 
 
-def verify_record(source: Path) -> dict[str, Any]:
+def verify_record(source: Path, expected_sha256: str | None = None) -> dict[str, Any]:
+    payload = source.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise ValueError(f"record digest mismatch: expected {expected_sha256}, got {digest}")
     record = read_record(source)
     return {
         "schema": "forgeyard-record-verify/v1",
         "record": str(source),
+        "sha256": digest,
         "task_id": record.task_id,
         "status": record.status.value,
         "evidence_count": len(record.evidence),
