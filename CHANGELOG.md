@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6 — guided review demo
+
+- Add a zero-setup `forgeyard demo` walkthrough that creates, verifies, and packets a synthetic record in a temporary directory.
+
+
 ## 0.2.5 — evidence identity contract
 
 - Reject empty or duplicate evidence names before a task record can become reviewable.

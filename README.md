@@ -25,6 +25,15 @@ forgeyard create \
   --output ./artifacts/demo-001.json
 ```
 
+For a zero-setup walkthrough that creates, verifies, and packets a synthetic record:
+
+```bash
+forgeyard demo
+```
+
+The command emits one `forgeyard-demo/v1` JSON document and uses a temporary directory, so it
+leaves no project files behind.
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.

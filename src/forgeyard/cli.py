@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import tempfile
 
 from . import __version__
 from .core import Evidence, EvidenceStatus, TaskRecord, build_review_packet, create_worktree, plan_worktree, read_record, verify_record, write_record
@@ -36,6 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--sha256", help="require the review packet to use this exact record digest")
     review.add_argument("--revision", required=True)
     review.add_argument("--path", action="append", required=True, dest="changed_paths")
+    sub.add_parser("demo", help="run the offline evidence-to-review walkthrough")
     return parser
 
 
@@ -91,6 +93,19 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"schema": "forgeyard-review-packet/v1", "status": "invalid", "error": str(exc)}))
             return 2
         print(json.dumps(packet, sort_keys=True))
+        return 0
+    if args.command == "demo":
+        with tempfile.TemporaryDirectory(prefix="forgeyard-demo-") as directory:
+            record_path = Path(directory) / "demo-record.json"
+            record = TaskRecord("demo-001", "fixture-repo", "add a feature")
+            record.add_evidence(Evidence("tests", EvidenceStatus.PASS, "3 passed", "demo-revision"))
+            record.add_evidence(Evidence("diff", EvidenceStatus.PASS, "clean diff", "demo-revision"))
+            record.finalize()
+            digest = write_record(record, record_path)
+            verification = verify_record(record_path, digest)
+            packet = build_review_packet(read_record(record_path), "demo-revision", ["src/example.py"])
+            packet["record_sha256"] = verification["sha256"]
+            print(json.dumps({"schema": "forgeyard-demo/v1", "verification": verification, "review_packet": packet}, sort_keys=True))
         return 0
     return 2
 

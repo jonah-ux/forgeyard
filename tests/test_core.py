@@ -1,8 +1,17 @@
 from pathlib import Path
 import subprocess
 
+from forgeyard.cli import main
 from forgeyard.core import Evidence, EvidenceStatus, TaskRecord, TaskStatus, WorktreeError, build_review_packet, create_worktree, plan_worktree, verify_record, write_record
 
+
+
+def test_demo_command_runs_the_reviewable_walkthrough(capsys):
+    assert main(["demo"]) == 0
+    output = capsys.readouterr().out
+    assert '"schema": "forgeyard-demo/v1"' in output
+    assert '"reviewable": true' in output
+    assert '"record_sha256"' in output
 
 def test_failed_evidence_blocks_completion():
     record = TaskRecord("task-1", "fixture-repo", "add a feature")
