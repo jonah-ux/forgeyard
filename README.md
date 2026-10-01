@@ -32,10 +32,10 @@ with status 2. A record is not a merge, deployment, or production verification c
 Verify a saved record before handing it to a reviewer:
 
 ```bash
-forgeyard verify ./artifacts/demo-001.json
+forgeyard verify ./artifacts/demo-001.json --sha256 <sha256-from-create>
 ```
 
-The verifier rejects malformed JSON and contradictory status/evidence combinations. It reports a
+The optional digest pin makes the verifier prove that the bytes you reviewed are the bytes that were created. The verifier rejects malformed JSON and contradictory status/evidence combinations. It reports a
 `forgeyard-record-verify/v1` document and never upgrades a blocked record to reviewable.
 
 Build a reviewer handoff only from a verified, passing record:
