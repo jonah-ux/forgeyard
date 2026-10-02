@@ -109,6 +109,17 @@ def evidence_from_report(source: Path, name: str, revision: str | None = None) -
     schema = payload.get("schema", "unknown")
     if not isinstance(schema, str) or not schema:
         schema = "unknown"
+    if schema == "ai-work-evidence/v1":
+        shared_status = payload.get("status")
+        status_by_shared = {
+            "observed": EvidenceStatus.PASS,
+            "verified": EvidenceStatus.PASS,
+            "failed": EvidenceStatus.FAIL,
+            "unknown": EvidenceStatus.UNKNOWN,
+        }
+        if shared_status not in status_by_shared:
+            raise ValueError(f"specialist report must contain a valid ai-work-evidence status: {source}")
+        return Evidence(name=name, status=status_by_shared[shared_status], detail=f"schema={schema}; status={shared_status}", revision=revision)
     if "ok" in payload:
         result = payload["ok"]
     elif schema == "agent-proof/interop/v1":

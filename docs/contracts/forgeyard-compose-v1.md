@@ -22,6 +22,10 @@ must be a JSON boolean. A missing, malformed, or non-boolean result is rejected.
 The reviewed `agent-proof/interop/v1` envelope is also accepted when its
 `projection.status.ok` field is a JSON boolean. Callers should run Agent Proof's
 source-bound `verify-interop --require-input` gate before composing that envelope.
+The portfolio `ai-work-evidence/v1` envelope is accepted through its bounded
+`status`: `observed` and `verified` become passing evidence, `failed` becomes
+failing evidence, and `unknown` remains non-reviewable. Raw summaries and
+artifacts are never copied into the Forgeyard record.
 
 ## Output
 

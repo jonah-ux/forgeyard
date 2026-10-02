@@ -83,6 +83,27 @@ def test_compose_rejects_malformed_agent_proof_interop_projection(tmp_path: Path
         raise AssertionError("malformed interop projection was accepted")
 
 
+def test_compose_accepts_shared_work_evidence_without_copying_summary(tmp_path: Path):
+    report = tmp_path / "atlas-evidence.json"
+    report.write_text(json.dumps({
+        "schema": "ai-work-evidence/v1",
+        "source": "atlas",
+        "status": "observed",
+        "summary": "private request text must stay outside the record",
+    }), encoding="utf-8")
+    evidence = evidence_from_report(report, "atlas")
+    assert evidence.status is EvidenceStatus.PASS
+    assert evidence.detail == "schema=ai-work-evidence/v1; status=observed"
+    assert "private request" not in evidence.detail
+
+
+def test_compose_keeps_unknown_shared_work_evidence_non_reviewable(tmp_path: Path):
+    report = tmp_path / "unknown-evidence.json"
+    report.write_text(json.dumps({"schema": "ai-work-evidence/v1", "source": "atlas", "status": "unknown"}), encoding="utf-8")
+    evidence = evidence_from_report(report, "atlas")
+    assert evidence.status is EvidenceStatus.UNKNOWN
+
+
 def test_compose_command_writes_reviewable_record(tmp_path: Path, capsys):
     report = tmp_path / "doctor.json"
     output = tmp_path / "record.json"
