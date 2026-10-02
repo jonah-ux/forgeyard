@@ -1,0 +1,19 @@
+{
+  "schema": "forgeyard-workbench-fixture/v1",
+  "reports": [
+    {
+      "name": "mcp-doctor",
+      "schema": "mcp-doctor/v1",
+      "ok": true,
+      "summary": "contract shape passed",
+      "details": ["1 tool", "1 resource", "1 prompt"]
+    },
+    {
+      "name": "agent-proof",
+      "schema": "agent-proof/interop/v1",
+      "ok": true,
+      "summary": "observed evidence sealed",
+      "details": ["source bytes bound", "unknowns explicit"]
+    }
+  ]
+}
