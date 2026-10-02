@@ -15,7 +15,7 @@ async function loadReports(scenario){
   state.reports=reports.map(r=>({...r,details:[...r.details]}));state.scenario=scenario;state.record=null;state.tampered=false;renderReports();renderRecord()
 }
 function renderReports(){
- $("reports").innerHTML=state.reports.map(r=>`<article class="report"><div class="report-top"><span class="report-name">${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema">${r.schema} · ${r.summary}</div><div class="report-schema">${r.details.join(" · ")}</div></article>`).join("");
+ $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
  $("specialist-count").textContent=state.reports.length;
  $("specialist-state").textContent=state.reports.length?`${state.scenario==="passing"?"Passing":"Failing"} synthetic scenario loaded`:"Waiting for fixtures";
  $("input-badge").textContent=state.reports.length?(state.scenario==="passing"?"PASSING":"FAILING"):"EMPTY";
@@ -35,6 +35,10 @@ function renderRecord(){
  $("integrity-detail").textContent=state.tampered?"Record bytes changed after sealing":r?`sha256 ${state.originalDigest.slice(0,16)}…`:"No digest calculated";
  $("record-badge").textContent=r?(r.status==="ready_for_review"?"REVIEWABLE":"BLOCKED"):"NOT READY";
  $("record-badge").className=`badge ${r?(r.status==="ready_for_review"?"ok":"bad"):""}`;
+ $("record-foot-text").textContent=state.tampered?"Digest no longer matches the displayed record.":r?(r.status==="ready_for_review"?"Record sealed; every supplied signal passed.":"Record sealed with a failed specialist signal."):"No record has been sealed yet.";
+ $("record-foot-mark").style.background=state.tampered?"var(--red)":r?"var(--cyan)":"var(--muted)";
+ const tone=r?(state.tampered||r.status!=="ready_for_review"?"bad":"ok"):"neutral";
+ ["specialist-count","decision","integrity"].forEach(id=>$(id).closest(".status-card").dataset.tone=tone);
  $("tamper").disabled=!r;$("export").disabled=!r;
 }
 function exportRecord(){if(!state.record)return;const blob=new Blob([JSON.stringify({...state.record,sha256:state.originalDigest},null,2)+"\n"],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
