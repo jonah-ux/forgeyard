@@ -29,3 +29,8 @@ creation and future resume adapters remain separate planned boundaries.
 ## Workbench
 
 The static `docs/workbench` page is a presentation and interaction layer over the same bounded contracts. Its synthetic reports are intentionally local; the CLI and provenance packet remain authoritative for real records.
+
+
+## Quality receipt
+
+`scripts/benchmark_compose.py` exercises the public CLI through a clean temporary report and record, then emits `forgeyard-benchmark/v1` with iteration count, median, and p95 timings. The numbers are machine-local performance observations, not adoption or deployment claims.

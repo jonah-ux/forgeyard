@@ -50,6 +50,8 @@ Each input must be a JSON object with a boolean `ok` field. Forgeyard stores onl
 its schema label, the boolean result, and the optional revision; the specialist payload remains in
 its own file. A false result blocks the record, and malformed or missing `ok` values are rejected.
 
+The public compose contract is documented in [`docs/contracts/forgeyard-compose-v1.md`](docs/contracts/forgeyard-compose-v1.md). Run the bounded CLI quality receipt with `python scripts/benchmark_compose.py --json`; it measures the same compose and verify path used by the Workbench story.
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.
