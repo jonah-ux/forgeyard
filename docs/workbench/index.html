@@ -12,10 +12,12 @@
     <header class="hero">
       <div class="eyebrow">FORGEYARD / WORKBENCH</div>
       <h1>Make agent work reviewable.</h1>
-      <p class="lede">Load bounded specialist reports, compose a review record, then change one byte and watch the integrity boundary refuse it.</p>
+      <p class="lede">Load a passing or failing specialist scenario, compose a review record, export it, then change one byte and watch the integrity boundary refuse it.</p>
       <div class="actions">
-        <button id="load-demo" class="primary">Load synthetic demo</button>
+        <button id="load-demo" class="primary">Load passing demo</button>
+        <button id="load-failure">Load failing case</button>
         <button id="compose" disabled>Compose review record</button>
+        <button id="export" disabled>Export JSON</button>
         <button id="tamper" disabled>Simulate tamper</button>
         <button id="reset" class="quiet">Reset</button>
       </div>
