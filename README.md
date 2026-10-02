@@ -149,6 +149,12 @@ paths, production logs, or proprietary operating policy. See `PROVENANCE.md` for
 ## Interactive flagship
 
 Open the [Forgeyard Workbench](https://jonah-ux.github.io/forgeyard/) to run the
-synthetic review flow in a browser: load specialist reports, compose a bounded
-record, and trigger the tamper refusal. The page is static and local-first; it
-contains no credentials, network calls, customer data, or hidden provider state.
+synthetic review flow in a browser. It has four inspectable paths:
+
+- **Passing case:** MCP Doctor and Agent Proof-style reports compose into `READY` evidence.
+- **Failing case:** an `MCP010` drift report composes into `BLOCKED` evidence.
+- **Tamper case:** changing the sealed request produces `REFUSED` integrity state.
+- **Export case:** the composed JSON record downloads as a portable artifact.
+
+The page is static and local-first; it contains no credentials, network calls,
+customer data, or hidden provider state.
