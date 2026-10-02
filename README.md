@@ -160,3 +160,5 @@ synthetic review flow in a browser. It has four inspectable paths:
 
 The page is static and local-first; it contains no credentials, network calls,
 customer data, or hidden provider state.
+
+The browser fixture is versioned as [`forgeyard-workbench-fixture/v1`](docs/contracts/forgeyard-workbench-fixture-v1.md), and the CLI contract remains authoritative for real records.
