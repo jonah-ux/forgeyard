@@ -34,7 +34,7 @@ forgeyard demo
 The command emits one `forgeyard-demo/v1` JSON document and uses a temporary directory, so it
 leaves no project files behind.
 
-Compose bounded reports from specialist tools such as MCP Doctor or Agent Proof without copying their raw payloads into the task record:
+Compose bounded reports from specialist tools such as MCP Doctor, Agent Proof, or Context Integrity Lab without copying their raw payloads into the task record. Agent Proof interop envelopes are accepted through their reviewed `projection.status.ok` field after source-bound verification:
 
 ```bash
 forgeyard compose \
@@ -46,8 +46,9 @@ forgeyard compose \
   --output ./artifacts/review-record.json
 ```
 
-Each input must be a JSON object with a boolean `ok` field. Forgeyard stores only the input name,
-its schema label, the boolean result, and the optional revision; the specialist payload remains in
+Each input must be a JSON object with a boolean `ok` field, or a reviewed Agent Proof interop
+envelope whose `projection.status.ok` field is boolean. Forgeyard stores only the input name, its
+schema label, the boolean result, and the optional revision; the specialist payload remains in
 its own file. A false result blocks the record, and malformed or missing `ok` values are rejected.
 
 The public compose contract is documented in [`docs/contracts/forgeyard-compose-v1.md`](docs/contracts/forgeyard-compose-v1.md). Run the bounded CLI quality receipt with `python scripts/benchmark_compose.py --json`; it measures the same compose and verify path used by the Workbench story.
@@ -153,7 +154,7 @@ paths, production logs, or proprietary operating policy. See `PROVENANCE.md` for
 Open the [Forgeyard Workbench](https://jonah-ux.github.io/forgeyard/) to run the
 synthetic review flow in a browser. It has four inspectable paths:
 
-- **Passing case:** MCP Doctor and Agent Proof-style reports compose into `READY` evidence.
+- **Passing case:** MCP Doctor, Agent Proof, and Context Integrity Lab-style reports compose into `READY` evidence.
 - **Failing case:** an `MCP010` drift report composes into `BLOCKED` evidence.
 - **Tamper case:** changing the sealed request produces `REFUSED` integrity state.
 - **Export case:** the composed JSON record downloads as a portable artifact.

@@ -19,6 +19,9 @@ UTF-8 JSON object containing:
 
 `schema` is optional and becomes `unknown` when absent. `ok` is required and
 must be a JSON boolean. A missing, malformed, or non-boolean result is rejected.
+The reviewed `agent-proof/interop/v1` envelope is also accepted when its
+`projection.status.ok` field is a JSON boolean. Callers should run Agent Proof's
+source-bound `verify-interop --require-input` gate before composing that envelope.
 
 ## Output
 
