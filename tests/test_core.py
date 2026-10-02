@@ -51,6 +51,38 @@ def test_compose_rejects_reports_without_boolean_result(tmp_path: Path):
         raise AssertionError("unbounded specialist report was accepted")
 
 
+def test_compose_accepts_agent_proof_interop_projection_without_copying_payload(tmp_path: Path):
+    report = tmp_path / "context-interop.json"
+    report.write_text(
+        json.dumps(
+            {
+                "schema": "agent-proof/interop/v1",
+                "projection": {"status": {"ok": True, "observed": True}},
+                "answer": "private answer text",
+            }
+        ),
+        encoding="utf-8",
+    )
+    evidence = evidence_from_report(report, "context", "abc123")
+    assert evidence.status is EvidenceStatus.PASS
+    assert evidence.detail == "schema=agent-proof/interop/v1; ok=true"
+    assert "private answer text" not in evidence.detail
+
+
+def test_compose_rejects_malformed_agent_proof_interop_projection(tmp_path: Path):
+    report = tmp_path / "malformed-interop.json"
+    report.write_text(
+        json.dumps({"schema": "agent-proof/interop/v1", "projection": {"status": {"ok": "yes"}}}),
+        encoding="utf-8",
+    )
+    try:
+        evidence_from_report(report, "context")
+    except ValueError as exc:
+        assert "boolean ok" in str(exc)
+    else:
+        raise AssertionError("malformed interop projection was accepted")
+
+
 def test_compose_command_writes_reviewable_record(tmp_path: Path, capsys):
     report = tmp_path / "doctor.json"
     output = tmp_path / "record.json"

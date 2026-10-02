@@ -11,5 +11,10 @@ fields used by `forgeyard-compose/v1`: `name`, `schema`, boolean `ok`, a short
 report in memory for the blocked scenario; it never calls a provider or reads a
 real project.
 
+The passing fixture intentionally crosses the public portfolio seam with
+`mcp-doctor/v1`, `agent-proof/interop/v1`, and `context-integrity/v1` reports.
+The last report represents a Context Integrity Lab admission result after its
+scope and freshness signals have been reduced to bounded, non-sensitive fields.
+
 The fixture is presentation data for the synthetic Workbench. The Forgeyard
 CLI and provenance packet remain authoritative for real records.

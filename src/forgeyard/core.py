@@ -92,8 +92,10 @@ def write_record(record: TaskRecord, destination: Path) -> str:
 def evidence_from_report(source: Path, name: str, revision: str | None = None) -> Evidence:
     """Convert a specialist JSON report into bounded Forgeyard evidence.
 
-    Reports must expose a boolean ``ok`` field. Only the schema label and boolean
-    result enter the task record; raw report details stay in the source file.
+    Reports expose a boolean ``ok`` field directly, or use the reviewed
+    ``agent-proof/interop/v1`` projection with ``projection.status.ok``. Only
+    the schema label and boolean result enter the task record; raw report
+    details stay in the source file.
     """
 
     if not name.strip():
@@ -102,13 +104,23 @@ def evidence_from_report(source: Path, name: str, revision: str | None = None) -
         payload = json.loads(source.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid specialist report: {source}") from exc
-    if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
+    if not isinstance(payload, dict):
         raise ValueError(f"specialist report must contain boolean ok: {source}")
     schema = payload.get("schema", "unknown")
     if not isinstance(schema, str) or not schema:
         schema = "unknown"
-    status = EvidenceStatus.PASS if payload["ok"] else EvidenceStatus.FAIL
-    detail = f"schema={schema}; ok={str(payload['ok']).lower()}"
+    if "ok" in payload:
+        result = payload["ok"]
+    elif schema == "agent-proof/interop/v1":
+        projection = payload.get("projection")
+        nested_status = projection.get("status") if isinstance(projection, dict) else None
+        result = nested_status.get("ok") if isinstance(nested_status, dict) else None
+    else:
+        result = None
+    if not isinstance(result, bool):
+        raise ValueError(f"specialist report must contain boolean ok: {source}")
+    status = EvidenceStatus.PASS if result else EvidenceStatus.FAIL
+    detail = f"schema={schema}; ok={str(result).lower()}"
     return Evidence(name=name, status=status, detail=detail, revision=revision)
 
 
