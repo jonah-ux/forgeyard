@@ -4,6 +4,7 @@
 
 - Accepted source-bound Agent Proof `agent-proof/interop/v1` envelopes through their reviewed
   `projection.status.ok` field, and added a Context Integrity Lab report to the Workbench fixture.
+- Aligned the installed `forgeyard --version` entry point with the 0.3.1 package release.
 
 ## 0.3.0 — portable provenance packets
 
