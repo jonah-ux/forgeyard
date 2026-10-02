@@ -1,14 +1,17 @@
 # Changelog
 
-## 0.3.0 — portable provenance packets (unreleased)
+## 0.3.1 — verified interoperability (unreleased)
+
+- Accepted source-bound Agent Proof `agent-proof/interop/v1` envelopes through their reviewed
+  `projection.status.ok` field, and added a Context Integrity Lab report to the Workbench fixture.
+
+## 0.3.0 — portable provenance packets
 
 - Added explicit `forgeyard-evidence-receipt/v1` records bound to task evidence and source paths.
 - Added `forgeyard-provenance-packet/v1` with embedded record/receipt bytes, source SHA-256 seals,
   revision binding, canonical packet integrity, and fail-closed live-source freshness verification.
 - Added CLI `receipt`, `packet`, and `verify-packet` commands without changing planned worktree or
   resume boundaries.
-- Accepted source-bound Agent Proof `agent-proof/interop/v1` envelopes through their reviewed
-  `projection.status.ok` field, and added a Context Integrity Lab report to the Workbench fixture.
 
 ## 0.2.6 — guided review demo
 
