@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 — governed release identity (unreleased)
+
+- Reissued the verified interoperability release through the annotated-tag workflow.
+- Kept the installed CLI version, package metadata, and release identity aligned.
+
 ## 0.3.1 — verified interoperability (unreleased)
 
 - Accepted source-bound Agent Proof `agent-proof/interop/v1` envelopes through their reviewed
