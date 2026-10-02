@@ -16,3 +16,5 @@ jobs:
       - run: python -m pip install -e .
       - run: python -m pytest -q
       - run: python -m compileall -q src tests
+      - name: benchmark public compose path
+        run: python scripts/benchmark_compose.py --iterations 3 --json
