@@ -189,9 +189,10 @@ def verify_record(source: Path, expected_sha256: str | None = None) -> dict[str,
     if expected_sha256 is not None and digest != expected_sha256:
         raise ValueError(f"record digest mismatch: expected {expected_sha256}, got {digest}")
     try:
-        record = _record_from_payload(json.loads(payload), source)
-    except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        decoded = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError) as exc:
         raise ValueError(f"invalid Forgeyard record: {source}") from exc
+    record = _record_from_payload(decoded, source)
     return {
         "schema": "forgeyard-record-verify/v1",
         "record": str(source),

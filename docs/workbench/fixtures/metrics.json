@@ -1,17 +1,17 @@
 {
   "schema": "forgeyard-workbench-metrics/v1",
-  "measured_at": "2026-10-03T00:15:00Z",
+  "measured_at": "2026-10-03T00:18:23Z",
   "protocol": "forgeyard-benchmark/v1",
   "environment": "Python 3.14.6 \u00b7 macOS local runner",
-  "sample_count": 50,
-  "receipt": "10x-forgeyard-benchmark-verify-optimized-20261002",
+  "sample_count": 200,
+  "receipt": "10x-forgeyard-benchmark-final-20261002",
   "guardrail": "result=pass; reviewable=true",
   "metrics": [
     {
       "id": "compose-p95",
       "label": "Compose p95",
-      "value": 63.801,
-      "target": 21.267,
+      "value": 102.046,
+      "target": 34.015,
       "unit": "ms",
       "direction": "lower",
       "note": "3\u00d7 speed target = baseline \u00f7 3"
@@ -19,8 +19,8 @@
     {
       "id": "verify-p95",
       "label": "Verify p95",
-      "value": 65.158,
-      "target": 21.719,
+      "value": 97.728,
+      "target": 32.576,
       "unit": "ms",
       "direction": "lower",
       "note": "3\u00d7 speed target = baseline \u00f7 3"
