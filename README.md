@@ -57,6 +57,21 @@ synthetic owner-shaped reports. `passing` is reviewable; `blocked` preserves an 
 [reference-flow contract](docs/contracts/forgeyard-reference-flow-v1.md) for the exact boundary
 and limitations.
 
+For a real local package handoff, use the opt-in installed mode with owner-produced synthetic
+artifacts:
+
+```bash
+python scripts/run_reference_flow.py --mode installed --scenario passing \
+  --chatlens-trace ./artifacts/chatlens.trace.jsonl \
+  --atlas-state ./artifacts/atlas-events.jsonl
+```
+
+This invokes the installed ChatLens, Atlas, Agent Proof, and Forgeyard CLIs through an explicit
+command map, source-verifies both evidence exports, and emits
+`forgeyard-installed-reference-flow/v1`. It refuses to substitute fixture reports when a command
+or input is unavailable; the installed path records bounded command metadata and keeps owner
+payloads out of its receipt.
+
 Compose bounded reports from specialist tools such as MCP Doctor, Agent Proof, or Context Integrity Lab without copying their raw payloads into the task record. Agent Proof interop envelopes are accepted through their reviewed `projection.status.ok` field after source-bound verification:
 
 ```bash
