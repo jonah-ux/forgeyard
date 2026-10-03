@@ -1,16 +1,22 @@
-const state={reports:[],record:null,originalDigest:null,tampered:false,scenario:"passing",metrics:null};
+const state={reports:[],record:null,originalDigest:null,tampered:false,scenario:"passing",metrics:null,fixtureSource:"files"};
 const $=id=>document.getElementById(id);
 let passingReports=[];let adversarialReports=[];
+const embeddedPassing=[{name:"context-integrity",schema:"context-integrity/v1",ok:true,summary:"scope and freshness admission passed",details:["citation bound","unknowns explicit"]},{name:"agent-proof",schema:"agent-proof/interop/v1",ok:true,summary:"observed evidence sealed",details:["source bytes bound","unknowns explicit"]},{name:"atlas-receipt",schema:"atlas-receipt/v1",ok:true,summary:"approval-gated lifecycle replayed",details:["restart-safe receipt","approval boundary observed"]}];
+const embeddedAdversarial=[{name:"mcp-doctor-drift",schema:"mcp-doctor/v1",ok:false,summary:"baseline drift refused",details:["MCP010","description changed"]},{name:"agent-trace",schema:"agent-trace/inspect/v1",ok:false,summary:"raw detail refused",details:["redaction boundary","unknowns explicit"]}];
 
 async function digest(value){const bytes=new TextEncoder().encode(JSON.stringify(value));const hash=await crypto.subtle.digest("SHA-256",bytes);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 async function loadReports(scenario){
   if(!passingReports.length||!adversarialReports.length){
-    const responses=await Promise.all([fetch("fixtures/specialists.json"),fetch("fixtures/adversarial.json")]);
-    if(responses.some(response=>!response.ok))throw new Error("workbench fixture could not be loaded");
-    const [fixture,adversarial]=await Promise.all(responses.map(response=>response.json()));
-    if(fixture.schema!=="forgeyard-workbench-fixture/v1"||!Array.isArray(fixture.reports))throw new Error("invalid workbench fixture");
-    if(adversarial.schema!=="forgeyard-workbench-adversarial/v1"||!Array.isArray(adversarial.reports))throw new Error("invalid adversarial fixture");
-    passingReports=fixture.reports;adversarialReports=adversarial.reports;
+    try{
+      const responses=await Promise.all([fetch("fixtures/specialists.json"),fetch("fixtures/adversarial.json")]);
+      if(responses.some(response=>!response.ok))throw new Error("workbench fixture could not be loaded");
+      const [fixture,adversarial]=await Promise.all(responses.map(response=>response.json()));
+      if(fixture.schema!=="forgeyard-workbench-fixture/v1"||!Array.isArray(fixture.reports))throw new Error("invalid workbench fixture");
+      if(adversarial.schema!=="forgeyard-workbench-adversarial/v1"||!Array.isArray(adversarial.reports))throw new Error("invalid adversarial fixture");
+      passingReports=fixture.reports;adversarialReports=adversarial.reports;state.fixtureSource="files";
+    }catch(error){
+      passingReports=embeddedPassing.map(report=>({...report,details:[...report.details]}));adversarialReports=embeddedAdversarial.map(report=>({...report,details:[...report.details]}));state.fixtureSource="embedded";
+    }
   }
   const reports=scenario==="passing"?passingReports:scenario==="adversarial"?adversarialReports:[...passingReports,{name:"mcp-doctor-drift",schema:"mcp-doctor/v1",ok:false,summary:"baseline drift refused",details:["MCP010","description changed"]}];
   state.reports=reports.map(r=>({...r,details:[...r.details]}));state.scenario=scenario;state.record=null;state.tampered=false;renderReports();renderRecord()
@@ -36,7 +42,8 @@ function renderMetrics(){
 }
 function renderLaunch(){
  const phase=state.tampered?"reset":state.record?"tamper":state.reports.length?"compose":"load";
- const labels={load:["WAITING","Load a passing scenario to light up the review loop."],compose:["REPORTS READY","Compose the bounded decision when the inputs look right."],tamper:["SEALED","Simulate tamper to see the digest refuse changed bytes."],reset:["REFUSED","The displayed record changed. Reset and start a clean review."]};
+ const fallbackNote=state.fixtureSource==="embedded"?" Embedded local fallback is active; the browser could not read fixture files.":"";
+ const labels={load:["WAITING","Load a passing scenario to light up the review loop."+fallbackNote],compose:["REPORTS READY","Compose the bounded decision when the inputs look right."+fallbackNote],tamper:["SEALED","Simulate tamper to see the digest refuse changed bytes."+fallbackNote],reset:["REFUSED","The displayed record changed. Reset and start a clean review."+fallbackNote]};
  $("launch-state").textContent=labels[phase][0];$("launch-hint").textContent=labels[phase][1];
  document.querySelectorAll("[data-phase-action]").forEach(button=>{const action=button.dataset.phaseAction;button.setAttribute("aria-current",String(action===phase));button.disabled=action==="compose"&&!state.reports.length||action==="tamper"&&!state.record;});
 }
