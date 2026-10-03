@@ -12,6 +12,10 @@ interface. That order keeps the truth model testable.
 
 ## Quick start
 
+Want the shortest route? Follow the **[Forgeyard in 60 seconds](docs/quickstart.md)**
+walkthrough. It covers install, a passing demo, an intentional failure, and the
+interactive Workbench without requiring any outside service.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -33,6 +37,10 @@ forgeyard demo
 
 The command emits one `forgeyard-demo/v1` JSON document and uses a temporary directory, so it
 leaves no project files behind.
+
+Forgeyard is standalone by default: the CLI has no runtime dependencies and the Workbench is a
+static fixture. Integrations such as MCP Doctor-style or Agent Proof-style reports are optional
+JSON inputs; no other repository, provider, database, credential, or local service is required.
 
 Compose bounded reports from specialist tools such as MCP Doctor, Agent Proof, or Context Integrity Lab without copying their raw payloads into the task record. Agent Proof interop envelopes are accepted through their reviewed `projection.status.ok` field after source-bound verification:
 
