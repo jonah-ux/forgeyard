@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -83,10 +84,8 @@ class TaskRecord:
 def write_record(record: TaskRecord, destination: Path) -> str:
     """Write a stable JSON record and return its content hash."""
 
-    payload = json.dumps(record.as_dict(), indent=2, sort_keys=True) + "\n"
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(payload, encoding="utf-8")
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    encoded = _atomic_json_write(destination, record.as_dict())
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def evidence_from_report(source: Path, name: str, revision: str | None = None) -> Evidence:
@@ -330,13 +329,8 @@ def write_evidence_receipt(
         "revision": evidence.revision,
         "source_paths": normalized_paths,
     }
-    encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    destination = destination.expanduser()
-    if destination.is_symlink():
-        raise ValueError(f"refusing to overwrite symlink output: {destination}")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(encoded, encoding="utf-8")
-    return _sha256(encoded.encode("utf-8"))
+    encoded = _atomic_json_write(destination, payload)
+    return _sha256(encoded)
 
 
 def _validate_receipt_payload(payload: Any, source: Path | str) -> dict[str, Any]:
@@ -453,21 +447,31 @@ def build_provenance_packet(
     return {**unsigned, "packet_sha256": _packet_sha256(unsigned)}
 
 
-def _atomic_json_write(destination: Path, payload: dict[str, Any]) -> None:
+def _atomic_json_write(destination: Path, payload: dict[str, Any]) -> bytes:
+    """Publish JSON after a durable temp-file write, returning the bytes written.
+
+    Existing regular files keep the helper's replace-on-success behavior. Symlink
+    outputs are refused before staging so an interrupted or redirected write
+    cannot mutate an unrelated path. A failed encode, flush, fsync, or replace
+    removes the temporary file and leaves the previous destination untouched.
+    """
+
     destination = destination.expanduser()
     if destination.is_symlink():
         raise ValueError(f"refusing to overwrite symlink output: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
+    encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
     fd, temporary = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent)
     try:
-        with open(fd, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2, sort_keys=True)
-            handle.write("\n")
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(encoded)
             handle.flush()
+            os.fsync(handle.fileno())
         Path(temporary).replace(destination)
     except Exception:
         Path(temporary).unlink(missing_ok=True)
         raise
+    return encoded
 
 
 def write_provenance_packet(
