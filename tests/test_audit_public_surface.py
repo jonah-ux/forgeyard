@@ -74,3 +74,14 @@ def test_public_audit_blocks_empty_tracked_file_scan():
         assert module._secret_scan()["state"] == "blocked"
     finally:
         module._tracked_files = original
+
+
+def test_public_audit_blocks_structurally_invalid_project_metadata(tmp_path):
+    module = _module()
+    original_root = module.ROOT
+    try:
+        module.ROOT = tmp_path
+        (tmp_path / "pyproject.toml").write_text('project = "malformed"\n[build-system]\nrequires = []\n', encoding="utf-8")
+        assert module._dependency_inventory()["state"] == "blocked"
+    finally:
+        module.ROOT = original_root

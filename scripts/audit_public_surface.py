@@ -111,6 +111,8 @@ def _dependency_inventory() -> dict[str, Any]:
         return {"state": "blocked", "error": str(exc)}
     project = payload.get("project", {})
     build = payload.get("build-system", {})
+    if not isinstance(project, dict) or not isinstance(build, dict):
+        return {"state": "blocked", "error": "project and build-system must be tables"}
     dependencies = project.get("dependencies", [])
     build_requires = build.get("requires", [])
     optional = project.get("optional-dependencies", {})
