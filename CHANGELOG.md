@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — Agent Systems Lab reference flow
+## 0.5.0 — Agent Systems Lab reference flow and benchmark (unreleased)
 
 - Add an offline `forgeyard-reference-flow/v1` harness covering context admission, capability
   policy, sandbox receipt, Atlas lifecycle, proof, resume, and Forgeyard verification.
