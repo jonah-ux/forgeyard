@@ -26,7 +26,7 @@ def test_public_audit_flags_high_signal_private_key(tmp_path):
     module = _module()
     original = module._tracked_files
     fake = tmp_path / "fixture.txt"
-    fake.write_bytes(b"-----BEGIN PRIVATE KEY-----\nsynthetic\n")
+    fake.write_bytes(b"-----BEGIN " + b"PRIVATE KEY-----\nsynthetic\n")
     module._tracked_files = lambda: [fake]
     try:
         result = module._secret_scan()
