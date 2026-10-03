@@ -89,10 +89,23 @@ Try the buttons in this order:
 2. **Compose record** — the page produces a `READY` decision and a digest.
 3. **Simulate tamper** — changing the displayed request produces `REFUSED`.
 4. **Load failing case** — one drift report produces a `BLOCKED` decision.
+5. **Load adversarial matrix** — six explicit stale, denied, unenforced, partial, queued, and tampered signals produce a sealed `BLOCKED` record.
 
 The Workbench contains no credentials, customer data, hidden provider state, or
 network calls. It is a visual fixture, not a deployment or production verification
 claim.
+
+For the same lifecycle in a terminal, run the checked-in reference harness:
+
+```bash
+python scripts/run_reference_flow.py --scenario passing
+python scripts/run_reference_flow.py --scenario blocked
+python scripts/run_reference_flow.py --scenario tampered
+```
+
+Each scenario returns zero when its expected result is observed and prints a
+`forgeyard-reference-flow/v1` receipt. The harness is synthetic and offline; it
+does not connect to the surrounding repositories or claim production adoption.
 
 ## What to read next
 
