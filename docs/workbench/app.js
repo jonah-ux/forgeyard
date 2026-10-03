@@ -40,6 +40,14 @@ function renderLaunch(){
  $("launch-state").textContent=labels[phase][0];$("launch-hint").textContent=labels[phase][1];
  document.querySelectorAll("[data-phase-action]").forEach(button=>{const action=button.dataset.phaseAction;button.setAttribute("aria-current",String(action===phase));button.disabled=action==="compose"&&!state.reports.length||action==="tamper"&&!state.record;});
 }
+function renderGuide(){
+ let guide={id:"passing",progress:"1 / 4",hint:"Load a passing scenario, then compose its bounded record."};
+ if(state.tampered)guide={id:"tamper",progress:"4 / 4",hint:"The digest refused changed bytes. Reset to run another route."};
+ else if(state.record)guide={id:"tamper",progress:"3 / 4",hint:"The receipt is sealed. Test the byte boundary to finish the route."};
+ else if(state.reports.length)guide={id:state.scenario==="passing"?"passing":state.scenario==="adversarial"?"adversarial":"blocking",progress:"2 / 4",hint:"Compose the record to make the decision and receipt visible."};
+ $("guide-progress").textContent=guide.progress;$("guide-hint").textContent=guide.hint;
+ document.querySelectorAll("[data-guide-action]").forEach(button=>{const action=button.dataset.guideAction;button.setAttribute("aria-current",String(action===guide.id));button.disabled=action==="tamper"&&!state.record;});
+}
 function renderReports(){
  $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
  $("specialist-count").textContent=state.reports.length;
@@ -49,6 +57,7 @@ function renderReports(){
  $("input-badge").className=`badge ${state.scenario==="passing"&&state.reports.length?"ok":state.reports.length?"bad":""}`;
  $("compose").disabled=!state.reports.length;
  renderLaunch();
+ renderGuide();
 }
 async function compose(){
  const record={schema:"forgeyard-compose/v1",task_id:`workbench-${state.scenario}`,repository:"synthetic-fixture",request:"review specialist reports",status:state.reports.every(r=>r.ok)?"ready_for_review":"blocked",evidence:state.reports.map(r=>({name:r.name,status:r.ok?"pass":"fail",detail:`schema=${r.schema}; ok=${r.ok}`,revision:"workbench-demo"})),boundary:"integrity is separate from outcome"};
@@ -68,8 +77,32 @@ function renderRecord(){
  const tone=r?(state.tampered||r.status!=="ready_for_review"?"bad":"ok"):"neutral";
  ["specialist-count","decision","integrity"].forEach(id=>$(id).closest(".status-card").dataset.tone=tone);
  $("tamper").disabled=!r;$("export").disabled=!r;
+ renderReceipt();
  renderLaunch();
+ renderGuide();
  renderLab();
+}
+function renderReceipt(){
+ const chips=$("receipt-chips");
+ if(!chips)return;
+ const r=state.record;
+ if(!r){chips.innerHTML='<span class="receipt-chip">NO RECEIPT</span>';$('copy-receipt').disabled=true;$("copy-status").textContent="";return;}
+ const decision=state.tampered?"REFUSED":r.status==="ready_for_review"?"READY":"BLOCKED";
+ const decisionTone=decision==="READY"?"ok":"bad";
+ const integrity=state.tampered?"DIGEST MISMATCH":"SEALED";
+ chips.innerHTML=`<span class="receipt-chip ${decisionTone}">${decision}</span><span class="receipt-chip">${r.evidence.length} SIGNALS</span><span class="receipt-chip">${integrity}</span><span class="receipt-chip">${r.schema}</span>`;
+ $("copy-receipt").disabled=false;
+}
+function receiptText(){return JSON.stringify({...state.record,sha256:state.originalDigest},null,2)+"\n"}
+async function copyReceipt(){
+ if(!state.record)return;
+ let copied=false;
+ try{await navigator.clipboard.writeText(receiptText());copied=true}catch{}
+ if(!copied){
+  const area=document.createElement("textarea");area.value=receiptText();area.setAttribute("readonly","");area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();try{copied=document.execCommand("copy")}catch{}area.remove();
+ }
+ $("copy-status").textContent=copied?"COPIED":"COPY UNAVAILABLE";
+ window.setTimeout(()=>$("copy-status").textContent="",2200);
 }
 function renderLab(){
  const card=$("lab-card");
@@ -87,12 +120,14 @@ function renderLab(){
  card.dataset.state=stateName;
  $("lab-state").textContent=stateLabel;$("lab-core").textContent=core;$("lab-readout").textContent=headline;$("lab-caption").textContent=caption;
 }
-function exportRecord(){if(!state.record)return;const blob=new Blob([JSON.stringify({...state.record,sha256:state.originalDigest},null,2)+"\n"],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
+function exportRecord(){if(!state.record)return;const blob=new Blob([receiptText()],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
+function tamperRecord(){if(!state.record)return;state.tampered=true;$("record").textContent=JSON.stringify({...state.record,request:"tampered request",sha256:state.originalDigest},null,2);renderRecord()}
 $("load-demo").addEventListener("click",()=>loadReports("passing").catch(error=>alert(error.message)));
 $("load-failure").addEventListener("click",()=>loadReports("failing").catch(error=>alert(error.message)));
 $("load-adversarial").addEventListener("click",()=>loadReports("adversarial").catch(error=>alert(error.message)));
-$("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);
-$("tamper").addEventListener("click",()=>{if(!state.record)return;state.tampered=true;$("record").textContent=JSON.stringify({...state.record,request:"tampered request",sha256:state.originalDigest},null,2);renderRecord()});
+$("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);$("copy-receipt").addEventListener("click",copyReceipt);
+$("tamper").addEventListener("click",tamperRecord);
 $("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});
 document.querySelectorAll("[data-phase-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.phaseAction;if(action==="load")$("load-demo").click();else if(action==="compose")$("compose").click();else if(action==="tamper")$("tamper").click();else $("reset").click()}));
+document.querySelectorAll("[data-guide-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.guideAction;if(action==="passing")$("load-demo").click();else if(action==="blocking")$("load-failure").click();else if(action==="adversarial")$("load-adversarial").click();else $("tamper").click()}));
 renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());
