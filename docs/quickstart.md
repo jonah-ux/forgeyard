@@ -89,7 +89,7 @@ Try the buttons in this order:
 2. **Compose record** — the page produces a `READY` decision and a digest.
 3. **Simulate tamper** — changing the displayed request produces `REFUSED`.
 4. **Load failing case** — one drift report produces a `BLOCKED` decision.
-5. **Load adversarial matrix** — six explicit stale, denied, unenforced, partial, queued, and tampered signals produce a sealed `BLOCKED` record.
+5. **Load adversarial matrix** — fifteen classified stale, denied, unenforced, partial, malformed, traversal, leakage, drift, duplicate, unbounded, false-completion, and tampered signals produce a sealed `BLOCKED` record.
 
 The Workbench contains no credentials, customer data, hidden provider state, or
 network calls. It is a visual fixture, not a deployment or production verification

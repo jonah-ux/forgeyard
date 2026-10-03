@@ -27,5 +27,24 @@ def test_adversarial_fixture_is_explicitly_refusal_oriented():
     fixture = json.loads(path.read_text(encoding="utf-8"))
     assert fixture["schema"] == "forgeyard-workbench-adversarial/v1"
     assert fixture["scenario"] == "adversarial"
-    assert len(fixture["reports"]) == 6
-    assert all(report["ok"] is False and report["details"] for report in fixture["reports"])
+    assert len(fixture["reports"]) == 15
+    assert all(report["ok"] is False and report["details"] and report["threat"] for report in fixture["reports"])
+    assert {
+        report["threat"] for report in fixture["reports"]
+    } == {
+        "stale-source",
+        "capability-denial",
+        "unenforced-execution",
+        "partial-input",
+        "unknown-lifecycle",
+        "tampered-bytes",
+        "path-traversal",
+        "symlink-escape",
+        "prompt-secret-leakage",
+        "schema-drift",
+        "duplicate-delivery",
+        "stale-source-identity",
+        "malformed-input",
+        "unbounded-output",
+        "false-completion",
+    }

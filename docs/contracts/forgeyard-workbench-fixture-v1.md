@@ -23,7 +23,11 @@ The fixture is presentation data for the synthetic Workbench. The Forgeyard
 CLI and provenance packet remain authoritative for real records.
 
 The Workbench also loads `fixtures/adversarial.json` as
-`forgeyard-workbench-adversarial/v1`. That matrix intentionally contains stale,
-denied, unenforced, partial, queued, and tampered signals. It is expected to
-compose into a blocked record, making refusal behavior inspectable without
-pretending that every local signal is a successful outcome.
+`forgeyard-workbench-adversarial/v1`. Each report adds a `threat` classification
+to the same bounded fields. The matrix covers stale source, capability denial,
+unenforced execution, partial and malformed input, unknown lifecycle, tampered
+bytes, path traversal, symlink escape, prompt/secret leakage, schema drift,
+duplicate delivery, stale source identity, unbounded output, and false
+completion. It is expected to compose into a blocked record, making refusal
+behavior inspectable without pretending that every local signal is a successful
+outcome.
