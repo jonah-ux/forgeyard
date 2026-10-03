@@ -51,3 +51,8 @@ print(evidence_digest(evidence))
 
 The module is the reference validator. Other repositories should project their existing public
 artifacts into this shape rather than copying raw source records or changing their own schemas.
+
+The synthetic compatibility corpus lives in [`conformance/`](../../conformance/). Run
+`python3 scripts/run_interop_conformance.py --json` to check valid, malformed, tampered, unknown
+version, unsafe path, bad hash, and non-reviewable status cases. The corpus is local evidence for
+protocol compatibility; it is not evidence of deployment or user-visible outcomes.

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Agent Systems Lab conformance corpus
+
+- Add a deterministic `ai-work-evidence/v1` corpus and runner covering valid, malformed, tampered,
+  unsafe-path, bad-hash, unknown-version, and non-reviewable status cases.
+
 ## 0.4.0 — shared work evidence contract
 
 - Add the dependency-free `ai-work-evidence/v1` validator and canonical fixture.

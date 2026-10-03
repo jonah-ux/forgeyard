@@ -1,0 +1,13 @@
+{
+  "schema": "forgeyard-conformance-manifest/v1",
+  "contract": "ai-work-evidence/v1",
+  "cases": [
+    {"name": "valid-observed", "file": "valid-observed.json", "valid": true, "compose_status": "pass"},
+    {"name": "status-unknown", "file": "status-unknown.json", "valid": true, "compose_status": "unknown"},
+    {"name": "status-failed", "file": "status-failed.json", "valid": true, "compose_status": "fail"},
+    {"name": "unknown-version", "file": "unknown-version.json", "valid": false},
+    {"name": "unsafe-artifact", "file": "unsafe-artifact.json", "valid": false},
+    {"name": "bad-hash", "file": "bad-hash.json", "valid": false},
+    {"name": "malformed", "file": "malformed.json", "valid": false}
+  ]
+}
