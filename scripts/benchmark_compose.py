@@ -25,6 +25,11 @@ def percentile(values: list[float], fraction: float) -> float:
     return sorted(values)[min(len(values) - 1, int((len(values) - 1) * fraction))]
 
 
+def three_x_latency(value: float) -> float:
+    """Return the lower-is-better target for a three-times speedup."""
+    return round(value / 3, 3)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--iterations", type=int, default=20)
@@ -62,6 +67,11 @@ def main() -> int:
         "compose_ms": {"median": round(statistics.median(compose_times), 3), "p95": round(percentile(compose_times, .95), 3)},
         "verify_ms": {"median": round(statistics.median(verify_times), 3), "p95": round(percentile(verify_times, .95), 3)},
         "result": "pass",
+    }
+    receipt["targets"] = {
+        "direction": "lower_is_better",
+        "compose_p95_ms": three_x_latency(receipt["compose_ms"]["p95"]),
+        "verify_p95_ms": three_x_latency(receipt["verify_ms"]["p95"]),
     }
     print(json.dumps(receipt, indent=2 if args.json else None, sort_keys=True))
     return 0

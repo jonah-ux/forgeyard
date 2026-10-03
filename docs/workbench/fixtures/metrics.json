@@ -1,0 +1,38 @@
+{
+  "schema": "forgeyard-workbench-metrics/v1",
+  "measured_at": "2026-10-03T00:08:20Z",
+  "protocol": "forgeyard-benchmark/v1",
+  "environment": "Python 3.14.6 \u00b7 macOS local runner",
+  "sample_count": 50,
+  "receipt": "10x-forgeyard-benchmark-current-20261002",
+  "guardrail": "result=pass; reviewable=true",
+  "metrics": [
+    {
+      "id": "compose-p95",
+      "label": "Compose p95",
+      "value": 69.364,
+      "target": 23.121,
+      "unit": "ms",
+      "direction": "lower",
+      "note": "3\u00d7 speed target = baseline \u00f7 3"
+    },
+    {
+      "id": "verify-p95",
+      "label": "Verify p95",
+      "value": 66.86,
+      "target": 22.287,
+      "unit": "ms",
+      "direction": "lower",
+      "note": "3\u00d7 speed target = baseline \u00f7 3"
+    },
+    {
+      "id": "reviewability",
+      "label": "Reviewability",
+      "value": 100,
+      "target": 100,
+      "unit": "%",
+      "direction": "ceiling",
+      "note": "Guardrail stays capped at a complete reviewable record"
+    }
+  ]
+}

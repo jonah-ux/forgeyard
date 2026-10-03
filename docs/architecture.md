@@ -33,4 +33,4 @@ The static `docs/workbench` page is a presentation and interaction layer over th
 
 ## Quality receipt
 
-`scripts/benchmark_compose.py` exercises the public CLI through a clean temporary report and record, then emits `forgeyard-benchmark/v1` with iteration count, median, and p95 timings. The numbers are machine-local performance observations, not adoption or deployment claims.
+`scripts/benchmark_compose.py` exercises the public CLI through a clean temporary report and record, then emits `forgeyard-benchmark/v1` with iteration count, median, p95 timings, and lower-is-better three-times latency targets. The numbers are machine-local performance observations, not adoption or deployment claims. The Workbench publishes the current receipt in `docs/workbench/fixtures/metrics.json`; refresh that fixture only from a fresh benchmark run and keep `result=pass` plus `reviewable=true` as guardrails.
