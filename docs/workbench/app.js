@@ -54,6 +54,7 @@ function renderGuide(){
  else if(state.reports.length)guide={id:state.scenario==="passing"?"passing":state.scenario==="adversarial"?"adversarial":"blocking",progress:"2 / 4",hint:"Compose the record to make the decision and receipt visible."};
  $("guide-progress").textContent=guide.progress;$("guide-hint").textContent=guide.hint;
  document.querySelectorAll("[data-guide-action]").forEach(button=>{const action=button.dataset.guideAction;button.setAttribute("aria-current",String(action===guide.id));button.disabled=action==="tamper"&&!state.record;});
+ $("copy-route").disabled=false;
 }
 function renderReports(){
  $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
@@ -111,6 +112,25 @@ async function copyReceipt(){
  $("copy-status").textContent=copied?"COPIED":"COPY UNAVAILABLE";
  window.setTimeout(()=>$("copy-status").textContent="",2200);
 }
+function routeUrl(){
+ const url=new URL(window.location.href);url.searchParams.set("scenario",state.scenario||"passing");
+ if(state.tampered)url.searchParams.set("tamper","1");else url.searchParams.delete("tamper");
+ return url.toString();
+}
+async function copyRoute(){
+ const value=routeUrl();let copied=false;
+ try{await navigator.clipboard.writeText(value);copied=true}catch{}
+ if(!copied){
+  const area=document.createElement("textarea");area.value=value;area.setAttribute("readonly","");area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();try{copied=document.execCommand("copy")}catch{}area.remove();
+ }
+ $("route-status").textContent=copied?"COPIED":"COPY UNAVAILABLE";window.setTimeout(()=>$("route-status").textContent="",2200);
+}
+async function bootFromLocation(){
+ const scenario=new URLSearchParams(window.location.search).get("scenario");
+ if(!["passing","failing","adversarial"].includes(scenario))return;
+ await loadReports(scenario);
+ if(new URLSearchParams(window.location.search).get("tamper")==="1"){await compose();tamperRecord();}
+}
 function renderLab(){
  const card=$("lab-card");
  if(!card)return;
@@ -134,7 +154,8 @@ $("load-failure").addEventListener("click",()=>loadReports("failing").catch(erro
 $("load-adversarial").addEventListener("click",()=>loadReports("adversarial").catch(error=>alert(error.message)));
 $("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);$("copy-receipt").addEventListener("click",copyReceipt);
 $("tamper").addEventListener("click",tamperRecord);
+$("copy-route").addEventListener("click",copyRoute);
 $("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});
 document.querySelectorAll("[data-phase-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.phaseAction;if(action==="load")$("load-demo").click();else if(action==="compose")$("compose").click();else if(action==="tamper")$("tamper").click();else $("reset").click()}));
 document.querySelectorAll("[data-guide-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.guideAction;if(action==="passing")$("load-demo").click();else if(action==="blocking")$("load-failure").click();else if(action==="adversarial")$("load-adversarial").click();else $("tamper").click()}));
-renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());
+renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());bootFromLocation().catch(error=>{console.warn(error.message)});
