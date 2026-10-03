@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 — shared work evidence contract
+
+- Add the dependency-free `ai-work-evidence/v1` validator and canonical fixture.
+- Let `compose` consume Atlas and ChatLens projections without copying raw payloads.
+
 ## 0.3.2 — governed release identity (unreleased)
 
 - Reissued the verified interoperability release through the annotated-tag workflow.
