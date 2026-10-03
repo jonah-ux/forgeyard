@@ -1,0 +1,12 @@
+{
+  "schema": "forgeyard-workbench-adversarial/v1",
+  "scenario": "adversarial",
+  "reports": [
+    {"name":"context-integrity-stale","schema":"context-integrity/v1","ok":false,"summary":"stale context refused","details":["status=stale","unknowns=no_fresh_records"]},
+    {"name":"agent-policy-deny","schema":"agent-policy/v1","ok":false,"summary":"deny-by-default policy stopped the request","details":["decision=deny","source=default_deny"]},
+    {"name":"agent-sandbox-fallback","schema":"agent-sandbox/v2","ok":false,"summary":"sandbox backend was not enforced","details":["backend=fallback","enforced=false"]},
+    {"name":"chatlens-partial","schema":"chatlens-trace-envelope/v1","ok":false,"summary":"partial trace remains unknown","details":["input=partial","status=unknown"]},
+    {"name":"atlas-queued","schema":"atlas-receipt/v1","ok":false,"summary":"queued lifecycle is not reviewable","details":["status=unknown","approval_not_observed"]},
+    {"name":"agent-proof-tampered","schema":"agent-proof/interop/v1","ok":false,"summary":"tampered proof projection refused","details":["digest=mismatch","source_state=invalid"]}
+  ]
+}

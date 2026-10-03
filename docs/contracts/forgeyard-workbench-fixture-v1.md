@@ -21,3 +21,9 @@ are not present.
 
 The fixture is presentation data for the synthetic Workbench. The Forgeyard
 CLI and provenance packet remain authoritative for real records.
+
+The Workbench also loads `fixtures/adversarial.json` as
+`forgeyard-workbench-adversarial/v1`. That matrix intentionally contains stale,
+denied, unenforced, partial, queued, and tampered signals. It is expected to
+compose into a blocked record, making refusal behavior inspectable without
+pretending that every local signal is a successful outcome.
