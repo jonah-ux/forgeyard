@@ -21,6 +21,48 @@
       "ok": true,
       "summary": "scope and freshness admission passed",
       "details": ["citation bound", "unknowns explicit"]
+    },
+    {
+      "name": "chatlens-trace",
+      "schema": "chatlens-trace-envelope/v1",
+      "ok": true,
+      "summary": "redacted trace handoff validated",
+      "details": ["event digest bound", "native identifiers omitted"]
+    },
+    {
+      "name": "atlas-receipt",
+      "schema": "atlas-receipt/v1",
+      "ok": true,
+      "summary": "approval-gated lifecycle replayed",
+      "details": ["restart-safe receipt", "approval boundary observed"]
+    },
+    {
+      "name": "agent-policy",
+      "schema": "agent-policy/v1",
+      "ok": true,
+      "summary": "deny-by-default capability decision recorded",
+      "details": ["policy digest bound", "explicit decision source"]
+    },
+    {
+      "name": "agent-sandbox",
+      "schema": "agent-sandbox/v2",
+      "ok": true,
+      "summary": "bounded command receipt recorded",
+      "details": ["fallback backend visible", "output digest bound"]
+    },
+    {
+      "name": "agent-resume",
+      "schema": "agent-resume/v1",
+      "ok": true,
+      "summary": "continuation record fingerprint validated",
+      "details": ["unknowns preserved", "successor context bounded"]
+    },
+    {
+      "name": "agent-trace",
+      "schema": "agent-trace/inspect/v1",
+      "ok": true,
+      "summary": "normalized trace inspection passed",
+      "details": ["redaction count visible", "raw digest separate"]
     }
   ]
 }
