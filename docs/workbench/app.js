@@ -1,4 +1,4 @@
-const state={reports:[],record:null,originalDigest:null,tampered:false,scenario:"passing"};
+const state={reports:[],record:null,originalDigest:null,tampered:false,scenario:"passing",metrics:null};
 const $=id=>document.getElementById(id);
 let passingReports=[];
 
@@ -13,6 +13,25 @@ async function loadReports(scenario){
   }
   const reports=scenario==="passing"?passingReports:[...passingReports,{name:"mcp-doctor-drift",schema:"mcp-doctor/v1",ok:false,summary:"baseline drift refused",details:["MCP010","description changed"]}];
   state.reports=reports.map(r=>({...r,details:[...r.details]}));state.scenario=scenario;state.record=null;state.tampered=false;renderReports();renderRecord()
+}
+async function loadMetrics(){
+  const response=await fetch("fixtures/metrics.json");
+  if(!response.ok)throw new Error("workbench metrics could not be loaded");
+  const metrics=await response.json();
+  if(metrics.schema!=="forgeyard-workbench-metrics/v1"||!Array.isArray(metrics.metrics))throw new Error("invalid workbench metrics");
+  state.metrics=metrics;renderMetrics();
+}
+function renderMetrics(){
+  const metrics=state.metrics;
+  $("metrics-badge").textContent=metrics?"CURRENT":"UNKNOWN";
+  $("metrics-badge").className=`badge ${metrics?"ok":"bad"}`;
+  if(!metrics){
+    $("metrics-list").innerHTML='<div class="empty">No current receipt is available.</div>';
+    $("metrics-meta").textContent="Unknown stays unknown until the benchmark is rerun.";
+    return;
+  }
+  $("metrics-list").innerHTML=metrics.metrics.map(metric=>`<article class="metric-card" data-direction="${metric.direction}"><div class="metric-top"><span class="metric-label">${metric.label}</span><span class="metric-direction">${metric.direction==="lower"?"LOWER IS BETTER":"CEILING"}</span></div><div class="metric-values"><div><small>BASELINE</small><strong>${metric.value}<em>${metric.unit}</em></strong></div><span class="metric-arrow">→</span><div><small>3× TARGET</small><strong>${metric.target}<em>${metric.unit}</em></strong></div></div><p>${metric.note}</p></article>`).join("");
+  $("metrics-meta").textContent=`${metrics.protocol} · ${metrics.environment} · n=${metrics.sample_count} · ${metrics.guardrail} · receipt ${metrics.receipt}`;
 }
 function renderReports(){
  $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
@@ -46,4 +65,4 @@ $("load-demo").addEventListener("click",()=>loadReports("passing").catch(error=>
 $("load-failure").addEventListener("click",()=>loadReports("failing").catch(error=>alert(error.message)));
 $("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);
 $("tamper").addEventListener("click",()=>{if(!state.record)return;state.tampered=true;$("record").textContent=JSON.stringify({...state.record,request:"tampered request",sha256:state.originalDigest},null,2);renderRecord()});
-$("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});renderReports();renderRecord();
+$("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());
