@@ -34,3 +34,13 @@ def test_public_audit_flags_high_signal_private_key(tmp_path):
         module._tracked_files = original
     assert result["state"] == "blocked"
     assert result["findings"] == [{"path": "fixture.txt", "class": "private_key"}]
+
+
+def test_public_audit_blocks_checksum_mismatch(tmp_path):
+    module = _module()
+    (tmp_path / "demo.whl").write_bytes(b"wheel")
+    (tmp_path / "demo.tar.gz").write_bytes(b"sdist")
+    (tmp_path / "SHA256SUMS").write_text("0" * 64 + "  demo.whl\n" + "1" * 64 + "  demo.tar.gz\n", encoding="utf-8")
+    report = module.audit(tmp_path)
+    assert report["artifact_audit"]["state"] == "blocked"
+    assert report["result"] == "blocked"
