@@ -146,3 +146,5 @@ a:hover { text-decoration: underline; }
 @keyframes orbit-reverse { to { transform: translate(-50%, -50%) rotate(-386deg); } }
 @keyframes signal-pulse { 0%, 100% { opacity: .45; transform: scaleY(.72); } 50% { opacity: 1; transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+@media (max-width: 460px) { .launch-top { align-items: flex-start; flex-direction: column; } .phase-rail { grid-template-columns: 1fr; } .actions { padding: 10px; } .action-group { width: 100%; } .action-group button { flex: 1 1 100%; } .action-group-end button { flex: 1 1 auto; } }
