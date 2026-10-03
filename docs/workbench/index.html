@@ -11,12 +11,27 @@
 <body>
   <main class="shell">
     <header class="hero">
-      <div class="hero-topline"><div class="eyebrow"><span class="signal-dot"></span>FORGEYARD / WORKBENCH</div><span class="version-chip">SYNTHETIC LAB</span></div>
+      <div class="hero-topline"><div class="eyebrow"><span class="signal-dot"></span>FORGEYARD / LOCAL-FIRST REVIEW BENCH</div><span class="version-chip">SYNTHETIC LAB</span></div>
       <div class="hero-grid">
         <div>
-          <h1>Make agent work <em>reviewable.</em></h1>
-          <p class="lede">A small, inspectable path from context admission through policy, execution, proof, and delivery. Load a scenario, compose the record, then test the byte boundary.</p>
-          <div class="launch-deck" aria-label="Launch the synthetic Forgeyard review loop"><div class="launch-top"><span>REVIEW DECK</span><strong id="launch-state">WAITING</strong></div><svg class="launch-circuit" viewBox="0 0 600 30" role="img" aria-label="Load, compose, seal, and refuse form a review loop"><path d="M12 15H588" fill="none" stroke="#8db2d6" stroke-opacity=".35" stroke-width="2" stroke-dasharray="7 9"/><circle cx="12" cy="15" r="6" fill="#77ddc2"/><circle cx="204" cy="15" r="6" fill="#a7a5ff"/><circle cx="396" cy="15" r="6" fill="#77ddc2"/><circle cx="588" cy="15" r="6" fill="#ff8f9c"/></svg><div class="phase-rail" role="group" aria-label="Interactive review phases"><button type="button" data-phase-action="load" aria-current="true"><b>01</b><span>Load</span><small>signals</small></button><button type="button" data-phase-action="compose" aria-current="false"><b>02</b><span>Compose</span><small>decision</small></button><button type="button" data-phase-action="tamper" aria-current="false"><b>03</b><span>Seal</span><small>digest</small></button><button type="button" data-phase-action="reset" aria-current="false"><b>04</b><span>Refuse</span><small>reset / retry</small></button></div><p id="launch-hint" role="status" aria-live="polite">Load a passing scenario. Direct-file fallback stays local.</p></div>
+          <h1>Evidence before <em>confidence.</em></h1>
+          <p class="lede">Forgeyard turns agent work into a reviewable receipt. Load bounded signals, compose a decision, then try to break the seal.</p>
+          <div class="hero-proof"><span><b>01</b> BOUNDED SIGNALS</span><span><b>02</b> HUMAN REVIEW</span><span><b>03</b> PAYLOAD SHA-256</span></div>
+          <div class="launch-deck" aria-label="Run the synthetic review loop">
+            <div class="launch-top"><span>REVIEW DECK</span><span class="badge" id="guide-progress">0 / 3</span></div>
+            <div class="scenario-controls" role="group" aria-label="Load a synthetic scenario">
+              <button id="load-demo" class="primary">Load passing demo</button>
+              <button id="load-failure">Failing case</button>
+              <button id="load-adversarial">Adversarial matrix</button>
+            </div>
+            <div class="review-controls" role="group" aria-label="Seal and test the record">
+              <button id="compose" disabled>Compose record <span class="button-arrow">↗</span></button>
+              <button id="tamper" disabled>Simulate tamper</button>
+              <button id="reset" class="quiet">Reset</button>
+            </div>
+            <p id="guide-hint" role="status" aria-live="polite">Choose a scenario to inspect its bounded signals.</p>
+            <div class="route-tools"><button id="copy-route" class="quiet" type="button">Copy route link</button><span id="route-status" role="status" aria-live="polite"></span></div>
+          </div>
         </div>
         <div class="flow-card lab-card" id="lab-card" data-state="standby" aria-label="Live synthetic lab signal">
           <div class="lab-head"><div class="flow-label">LIVE LAB SIGNAL</div><span class="lab-state" id="lab-state">STANDBY</span></div>
@@ -28,29 +43,10 @@
           </div>
           <div class="signal-readout" aria-live="polite"><strong id="lab-readout">Waiting for a synthetic scenario</strong><span id="lab-caption">Load a case to wake the evidence field.</span></div>
           <div class="signal-bars" aria-hidden="true"><span class="signal-bar signal-bar-a"></span><span class="signal-bar signal-bar-b"></span><span class="signal-bar signal-bar-c"></span><span class="signal-bar signal-bar-d"></span><span class="signal-bar signal-bar-e"></span><span class="signal-bar signal-bar-f"></span><span class="signal-bar signal-bar-g"></span><span class="signal-bar signal-bar-h"></span></div>
-          <div class="flow-divider"></div>
-          <div class="flow-label">STATE PATH</div><svg class="flow-orbit" viewBox="0 0 280 26" role="img" aria-label="Signals move from input to decision to digest"><path d="M6 13h268" fill="none" stroke="#8db2d6" stroke-opacity=".3" stroke-width="2" stroke-dasharray="5 7"/><circle cx="6" cy="13" r="5" fill="#77ddc2"/><circle cx="140" cy="13" r="5" fill="#a7a5ff"/><circle cx="274" cy="13" r="5" fill="#77ddc2"/></svg>
-          <div class="flow-step"><span>01</span><b>Load</b><small>specialist reports</small></div>
-          <div class="flow-line"></div>
-          <div class="flow-step"><span>02</span><b>Compose</b><small>bounded decision</small></div>
-          <div class="flow-line"></div>
-          <div class="flow-step"><span>03</span><b>Seal</b><small>digest + readback</small></div>
+
         </div>
       </div>
-      <div class="actions">
-        <div class="action-group"><span class="action-label">SCENARIO</span><button id="load-demo" class="primary"><span class="button-mark">✓</span> Load passing demo</button><button id="load-failure"><span class="button-mark">!</span> Load failing case</button><button id="load-adversarial"><span class="button-mark">×</span> Load adversarial matrix</button></div>
-        <div class="action-group action-group-end"><span class="action-label">REVIEW</span><button id="compose" disabled>Compose record <span class="button-arrow">↗</span></button><button id="export" disabled>Export JSON</button><button id="tamper" disabled>Simulate tamper</button><button id="reset" class="quiet">Reset</button></div>
-      </div>
-      <div class="guide-strip" aria-label="Guided proof route">
-        <div class="guide-top"><div><span class="kicker">PROOF ROUTE</span><strong>Four moves from input to refusal.</strong></div><span class="badge" id="guide-progress">1 / 4</span></div>
-        <div class="guide-grid" role="group" aria-label="Choose a proof route">
-          <button type="button" data-guide-action="passing" aria-current="true"><b>01</b><span>Pass</span><small>all signals clear</small></button>
-          <button type="button" data-guide-action="blocking" aria-current="false"><b>02</b><span>Block</span><small>one signal fails</small></button>
-          <button type="button" data-guide-action="adversarial" aria-current="false"><b>03</b><span>Matrix</span><small>edge cases stay visible</small></button>
-          <button type="button" data-guide-action="tamper" aria-current="false" disabled><b>04</b><span>Tamper</span><small>digest refuses bytes</small></button>
-        </div>
-        <div class="guide-foot"><p id="guide-hint" class="guide-hint" role="status" aria-live="polite">Load a passing scenario, then compose its bounded record.</p><button id="copy-route" class="quiet" type="button">Copy route link</button><span id="route-status" role="status" aria-live="polite"></span></div>
-      </div>
+
     </header>
 
     <section class="status-grid" aria-label="Workbench status">
@@ -59,23 +55,24 @@
       <article class="status-card" data-tone="neutral"><div class="status-head"><span class="label">INTEGRITY</span><span class="status-icon">◇</span></div><strong id="integrity">—</strong><span id="integrity-detail">No digest calculated</span></article>
     </section>
 
-    <section class="metrics-board" aria-label="Three times improvement targets">
-      <div class="metrics-head"><div><span class="kicker">BENCHMARK RECEIPT</span><h2>Make the good measurable.</h2><p class="panel-subtitle">Machine-local baselines with a speed target and reviewability guardrail.</p></div><span class="badge" id="metrics-badge">LOADING</span></div>
-      <div id="metrics-list" class="metrics-list"><div class="empty">Loading the current measurement receipt.</div></div>
-      <div id="metrics-meta" class="metrics-meta">Primary protocol and environment will appear here.</div>
-    </section>
-
-    <section class="workspace">
+    <section class="workspace" id="workspace" aria-label="Inspect the evidence and receipt">
       <div class="panel reports-panel">
         <div class="panel-head"><div><span class="kicker">01 / INPUT</span><h2>Specialist reports</h2><p class="panel-subtitle">Each report contributes one bounded signal.</p></div><span class="badge" id="input-badge">EMPTY</span></div>
-        <div id="reports" class="report-list"><div class="empty">The synthetic fixture stays local to this page.</div></div>
+        <div id="reports" class="report-list" role="region" aria-label="Bounded specialist signals" tabindex="0"><div class="empty">The synthetic fixture stays local to this page.</div></div>
       </div>
       <div class="panel record-panel">
         <div class="panel-head"><div><span class="kicker">02 / DECISION</span><h2>Review record</h2><p class="panel-subtitle">The record carries the decision, evidence names, and digest.</p></div><span class="badge" id="record-badge">NOT READY</span></div>
         <pre id="record" class="json-view" aria-live="polite">Load the demo to create a bounded record.</pre>
-        <div class="receipt-tools"><div id="receipt-chips" class="receipt-chips" aria-label="Receipt summary"><span class="receipt-chip">NO RECEIPT</span></div><div class="receipt-actions"><button id="copy-receipt" class="quiet" disabled>Copy receipt</button><span id="copy-status" role="status" aria-live="polite"></span></div></div>
+        <div class="receipt-tools"><div id="receipt-chips" class="receipt-chips" aria-label="Receipt summary"><span class="receipt-chip">NO RECEIPT</span></div><div class="receipt-actions"><button id="copy-receipt" class="quiet" disabled>Copy receipt</button><button id="export" class="quiet" disabled>Export JSON</button><span id="copy-status" role="status" aria-live="polite"></span></div></div>
+        <dl id="digest-comparison" class="digest-comparison" hidden><div><dt>Sealed SHA-256</dt><dd id="sealed-digest"></dd></div><div><dt>Observed SHA-256</dt><dd id="observed-digest"></dd></div></dl>
         <div class="record-foot"><span id="record-foot-mark" class="record-foot-mark"></span><span id="record-foot-text">No record has been sealed yet.</span></div>
       </div>
+    </section>
+
+    <section class="metrics-board" aria-label="Local benchmark receipt">
+      <div class="metrics-head"><div><span class="kicker">BENCHMARK RECEIPT</span><h2>Benchmarks, not promises.</h2><p class="panel-subtitle">Machine-local timing with a reviewability guardrail. This is evidence about the bench, not a production claim.</p></div><span class="badge" id="metrics-badge">LOADING</span></div>
+      <div id="metrics-list" class="metrics-list"><div class="empty">Loading the current measurement receipt.</div></div>
+      <div id="metrics-meta" class="metrics-meta">Primary protocol and environment will appear here.</div>
     </section>
 
     <section class="boundary" aria-label="Evidence boundary">

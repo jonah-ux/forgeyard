@@ -85,15 +85,24 @@ The public Workbench is a static, synthetic tour of the same boundary:
 
 Try the buttons in this order:
 
-1. **Load passing demo** — three specialist reports arrive as bounded inputs.
+1. **Load passing demo** — specialist reports arrive as bounded inputs.
 2. **Compose record** — the page produces a `READY` decision and a digest.
-3. **Simulate tamper** — changing the displayed request produces `REFUSED`.
-4. **Load failing case** — one drift report produces a `BLOCKED` decision.
-5. **Load adversarial matrix** — fifteen classified stale, denied, unenforced, partial, malformed, traversal, leakage, drift, duplicate, unbounded, false-completion, and tampered signals produce a sealed `BLOCKED` record.
+3. **Simulate tamper** — the request changes, SHA-256 is recalculated, and the receipt becomes `REFUSED`. Compare the sealed and observed digests below the receipt.
+4. **Failing case**, then **Compose record** — a failed drift signal produces a sealed `BLOCKED` decision.
+5. **Adversarial matrix**, then **Compose record** — fifteen classified refusal signals produce a sealed `BLOCKED` record.
+
+Copy or export uses the displayed receipt, including its changed request after tamper.
+The refused JSON deliberately retains its original decision and seal: verify the
+digest before trusting the status field. The export filename and copy button mark
+this invalid fixture as refused.
+The browser seal hashes the compact JSON payload without its `sha256` field; it is
+a synthetic demonstration, not a CLI record verification result. **Copy route link**
+replays the selected scenario and its composed or tampered state.
 
 The Workbench contains no credentials, customer data, hidden provider state, or
-network calls. It is a visual fixture, not a deployment or production verification
-claim.
+provider calls. The hosted page reads fixture files from its own site; when opened
+directly or when those reads fail, it discloses a smaller embedded fallback. It is
+a visual fixture, not a deployment or production verification claim.
 
 For the same lifecycle in a terminal, run the checked-in reference harness:
 

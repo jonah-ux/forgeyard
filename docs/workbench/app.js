@@ -1,4 +1,4 @@
-const state={reports:[],record:null,originalDigest:null,tampered:false,scenario:"passing",metrics:null,fixtureSource:"files"};
+const state={reports:[],record:null,originalDigest:null,observedDigest:null,tampered:false,scenario:"passing",metrics:null,fixtureSource:"files",revision:0};
 const $=id=>document.getElementById(id);
 let passingReports=[];let adversarialReports=[];
 const embeddedPassing=[{name:"context-integrity",schema:"context-integrity/v1",ok:true,summary:"scope and freshness admission passed",details:["citation bound","unknowns explicit"]},{name:"agent-proof",schema:"agent-proof/interop/v1",ok:true,summary:"observed evidence sealed",details:["source bytes bound","unknowns explicit"]},{name:"atlas-receipt",schema:"atlas-receipt/v1",ok:true,summary:"approval-gated lifecycle replayed",details:["restart-safe receipt","approval boundary observed"]}];
@@ -6,6 +6,8 @@ const embeddedAdversarial=[{name:"mcp-doctor-drift",schema:"mcp-doctor/v1",ok:fa
 
 async function digest(value){const bytes=new TextEncoder().encode(JSON.stringify(value));const hash=await crypto.subtle.digest("SHA-256",bytes);return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 async function loadReports(scenario){
+  const revision=++state.revision;
+  state.reports=[];state.record=null;state.originalDigest=null;state.observedDigest=null;state.tampered=false;state.scenario=scenario;renderReports();renderRecord();
   if(!passingReports.length||!adversarialReports.length){
     try{
       const responses=await Promise.all([fetch("fixtures/specialists.json"),fetch("fixtures/adversarial.json")]);
@@ -13,13 +15,16 @@ async function loadReports(scenario){
       const [fixture,adversarial]=await Promise.all(responses.map(response=>response.json()));
       if(fixture.schema!=="forgeyard-workbench-fixture/v1"||!Array.isArray(fixture.reports))throw new Error("invalid workbench fixture");
       if(adversarial.schema!=="forgeyard-workbench-adversarial/v1"||!Array.isArray(adversarial.reports))throw new Error("invalid adversarial fixture");
+      if(revision!==state.revision)return;
       passingReports=fixture.reports;adversarialReports=adversarial.reports;state.fixtureSource="files";
     }catch(error){
+      if(revision!==state.revision)return;
       passingReports=embeddedPassing.map(report=>({...report,details:[...report.details]}));adversarialReports=embeddedAdversarial.map(report=>({...report,details:[...report.details]}));state.fixtureSource="embedded";
     }
   }
   const reports=scenario==="passing"?passingReports:scenario==="adversarial"?adversarialReports:[...passingReports,{name:"mcp-doctor-drift",schema:"mcp-doctor/v1",ok:false,summary:"baseline drift refused",details:["MCP010","description changed"]}];
-  state.reports=reports.map(r=>({...r,details:[...r.details]}));state.scenario=scenario;state.record=null;state.tampered=false;renderReports();renderRecord()
+  if(revision!==state.revision)return;
+  state.reports=reports.map(r=>({...r,details:[...r.details]}));renderReports();renderRecord()
 }
 async function loadMetrics(){
   const response=await fetch("fixtures/metrics.json");
@@ -30,63 +35,67 @@ async function loadMetrics(){
 }
 function renderMetrics(){
   const metrics=state.metrics;
-  $("metrics-badge").textContent=metrics?"CURRENT":"UNKNOWN";
-  $("metrics-badge").className=`badge ${metrics?"ok":"bad"}`;
+  $("metrics-badge").textContent=metrics?"SNAPSHOT":"UNKNOWN";
+  $("metrics-badge").className=`badge ${metrics?"":"bad"}`;
   if(!metrics){
     $("metrics-list").innerHTML='<div class="empty">No current receipt is available.</div>';
     $("metrics-meta").textContent="Unknown stays unknown until the benchmark is rerun.";
     return;
   }
   $("metrics-list").innerHTML=metrics.metrics.map(metric=>`<article class="metric-card" data-direction="${metric.direction}"><div class="metric-top"><span class="metric-label">${metric.label}</span><span class="metric-direction">${metric.direction==="lower"?"LOWER IS BETTER":"CEILING"}</span></div><div class="metric-values"><div><small>BASELINE</small><strong>${metric.value}<em>${metric.unit}</em></strong></div><span class="metric-arrow">→</span><div><small>3× TARGET</small><strong>${metric.target}<em>${metric.unit}</em></strong></div></div><p>${metric.note}</p></article>`).join("");
-  $("metrics-meta").textContent=`${metrics.protocol} · ${metrics.environment} · n=${metrics.sample_count} · ${metrics.guardrail} · receipt ${metrics.receipt}`;
-}
-function renderLaunch(){
- const phase=state.tampered?"reset":state.record?"tamper":state.reports.length?"compose":"load";
- const fallbackNote=state.fixtureSource==="embedded"?" Embedded local fallback is active; the browser could not read fixture files.":"";
- const labels={load:["WAITING","Load a passing scenario to light up the review loop."+fallbackNote],compose:["REPORTS READY","Compose the bounded decision when the inputs look right."+fallbackNote],tamper:["SEALED","Simulate tamper to see the digest refuse changed bytes."+fallbackNote],reset:["REFUSED","The displayed record changed. Reset and start a clean review."+fallbackNote]};
- $("launch-state").textContent=labels[phase][0];$("launch-hint").textContent=labels[phase][1];
- document.querySelectorAll("[data-phase-action]").forEach(button=>{const action=button.dataset.phaseAction;button.setAttribute("aria-current",String(action===phase));button.disabled=action==="compose"&&!state.reports.length||action==="tamper"&&!state.record;});
+  $("metrics-meta").textContent=`Measured ${metrics.measured_at} · ${metrics.protocol} · ${metrics.environment} · n=${metrics.sample_count} · ${metrics.guardrail} · receipt ${metrics.receipt}`;
 }
 function renderGuide(){
- let guide={id:"passing",progress:"1 / 4",hint:"Load a passing scenario, then compose its bounded record."};
- if(state.tampered)guide={id:"tamper",progress:"4 / 4",hint:"The digest refused changed bytes. Reset to run another route."};
- else if(state.record)guide={id:"tamper",progress:"3 / 4",hint:"The receipt is sealed. Test the byte boundary to finish the route."};
- else if(state.reports.length)guide={id:state.scenario==="passing"?"passing":state.scenario==="adversarial"?"adversarial":"blocking",progress:"2 / 4",hint:"Compose the record to make the decision and receipt visible."};
+ let guide={progress:"0 / 3",hint:"Choose a scenario to inspect its bounded signals."};
+ if(state.tampered)guide={progress:"3 / 3",hint:"SHA-256 refused the changed request. Compare the two digests below, then reset."};
+ else if(state.record)guide={progress:"2 / 3",hint:"The receipt is sealed. Change its request to test whether the digest holds."};
+ else if(state.reports.length)guide={progress:"1 / 3",hint:"Signals loaded. Compose the record to seal a ready or blocked decision."};
+ if(state.fixtureSource==="embedded"&&state.reports.length)guide.hint+=" Embedded fallback fixture is active.";
  $("guide-progress").textContent=guide.progress;$("guide-hint").textContent=guide.hint;
- document.querySelectorAll("[data-guide-action]").forEach(button=>{const action=button.dataset.guideAction;button.setAttribute("aria-current",String(action===guide.id));button.disabled=action==="tamper"&&!state.record;});
- $("copy-route").disabled=false;
+ $("copy-route").disabled=!state.reports.length;
+ ["load-demo","load-failure","load-adversarial"].forEach((id,index)=>$(id).setAttribute("aria-pressed",String(state.reports.length>0&&state.scenario===["passing","failing","adversarial"][index])));
 }
 function renderReports(){
- $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
+ $("reports").innerHTML=state.reports.length?state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join(""):'<div class="empty">Load a synthetic case to inspect the specialist signals.</div>';
  $("specialist-count").textContent=state.reports.length;
  const label=state.scenario==="passing"?"Passing":state.scenario==="adversarial"?"Adversarial":"Failing";
  $("specialist-state").textContent=state.reports.length?`${label} synthetic scenario loaded`:"Waiting for fixtures";
  $("input-badge").textContent=state.reports.length?(state.scenario==="passing"?"PASSING":"REFUSAL"):"EMPTY";
  $("input-badge").className=`badge ${state.scenario==="passing"&&state.reports.length?"ok":state.reports.length?"bad":""}`;
  $("compose").disabled=!state.reports.length;
- renderLaunch();
  renderGuide();
 }
 async function compose(){
+ if(!state.reports.length||state.tampered)return;
+ const revision=++state.revision;
  const record={schema:"forgeyard-compose/v1",task_id:`workbench-${state.scenario}`,repository:"synthetic-fixture",request:"review specialist reports",status:state.reports.every(r=>r.ok)?"ready_for_review":"blocked",evidence:state.reports.map(r=>({name:r.name,status:r.ok?"pass":"fail",detail:`schema=${r.schema}; ok=${r.ok}`,revision:"workbench-demo"})),boundary:"integrity is separate from outcome"};
- state.originalDigest=await digest(record);state.record=record;state.tampered=false;renderRecord();
+ const sealed=await digest(record);
+ if(revision!==state.revision)return;
+ state.originalDigest=sealed;state.observedDigest=sealed;state.record=record;state.tampered=false;renderRecord();
 }
 function renderRecord(){
  const r=state.record;
  $("record").textContent=r?JSON.stringify({...r,sha256:state.originalDigest},null,2):"Load a scenario to create a bounded record.";
- $("decision").textContent=r?(r.status==="ready_for_review"?"READY":"BLOCKED"):"—";
- $("decision-detail").textContent=r?(r.status==="ready_for_review"?"All supplied evidence passed":"A specialist report failed closed"):"No record composed";
+ $("decision").textContent=state.tampered?"REFUSED":r?(r.status==="ready_for_review"?"READY":"BLOCKED"):"—";
+ $("decision-detail").textContent=state.tampered?"Changed receipt requires a new review":r?(r.status==="ready_for_review"?"All supplied evidence passed":"A specialist report failed closed"):"No record composed";
  $("integrity").textContent=state.tampered?"REFUSED":r?"SEALED":"—";
  $("integrity-detail").textContent=state.tampered?"Record bytes changed after sealing":r?`sha256 ${state.originalDigest.slice(0,16)}…`:"No digest calculated";
- $("record-badge").textContent=r?(r.status==="ready_for_review"?"REVIEWABLE":"BLOCKED"):"NOT READY";
- $("record-badge").className=`badge ${r?(r.status==="ready_for_review"?"ok":"bad"):""}`;
- $("record-foot-text").textContent=state.tampered?"Digest no longer matches the displayed record.":r?(r.status==="ready_for_review"?"Record sealed; every supplied signal passed.":"Record sealed with a failed specialist signal."):"No record has been sealed yet.";
+ $("record-badge").textContent=state.tampered?"REFUSED":r?(r.status==="ready_for_review"?"REVIEWABLE":"BLOCKED"):"NOT READY";
+ $("record-badge").className=`badge ${r?(!state.tampered&&r.status==="ready_for_review"?"ok":"bad"):""}`;
+ $("digest-comparison").hidden=!r;
+ $("sealed-digest").textContent=r?state.originalDigest:"";
+ $("observed-digest").textContent=r?state.observedDigest:"";
+ $("observed-digest").className=state.tampered?"digest-mismatch":"";
+ $("record-foot-text").textContent=state.tampered?"Refused receipt: changed payload does not match the sealed digest. Reset to review again.":r?"SHA-256 covers the compact JSON payload, excluding its sha256 field.":"No record has been sealed yet.";
  $("record-foot-mark").style.background=state.tampered?"var(--red)":r?"var(--cyan)":"var(--muted)";
- const tone=r?(state.tampered||r.status!=="ready_for_review"?"bad":"ok"):"neutral";
- ["specialist-count","decision","integrity"].forEach(id=>$(id).closest(".status-card").dataset.tone=tone);
- $("tamper").disabled=!r;$("export").disabled=!r;
+ $("specialist-count").closest(".status-card").dataset.tone=state.reports.length?(state.reports.every(report=>report.ok)?"ok":"bad"):"neutral";
+ $("decision").closest(".status-card").dataset.tone=r?(!state.tampered&&r.status==="ready_for_review"?"ok":"bad"):"neutral";
+ $("integrity").closest(".status-card").dataset.tone=r?(state.tampered?"bad":"ok"):"neutral";
+ $("compose").disabled=!state.reports.length||state.tampered;
+ $("tamper").disabled=!r||state.tampered;$("export").disabled=!r;
+ $("export").textContent=state.tampered?"Export refused JSON":"Export JSON";
+ $("copy-receipt").textContent=state.tampered?"Copy refused receipt":"Copy receipt";
  renderReceipt();
- renderLaunch();
  renderGuide();
  renderLab();
 }
@@ -114,6 +123,7 @@ async function copyReceipt(){
 }
 function routeUrl(){
  const url=new URL(window.location.href);url.searchParams.set("scenario",state.scenario||"passing");
+ if(state.record)url.searchParams.set("compose","1");else url.searchParams.delete("compose");
  if(state.tampered)url.searchParams.set("tamper","1");else url.searchParams.delete("tamper");
  return url.toString();
 }
@@ -128,8 +138,16 @@ async function copyRoute(){
 async function bootFromLocation(){
  const scenario=new URLSearchParams(window.location.search).get("scenario");
  if(!["passing","failing","adversarial"].includes(scenario))return;
- await loadReports(scenario);
- if(new URLSearchParams(window.location.search).get("tamper")==="1"){await compose();tamperRecord();}
+ const loading=loadReports(scenario);
+ let revision=state.revision;
+ await loading;
+ if(revision!==state.revision)return;
+ const params=new URLSearchParams(window.location.search);
+ if(params.get("compose")==="1"||params.get("tamper")==="1"){
+  const composing=compose();revision=state.revision;await composing;
+  if(revision!==state.revision)return;
+ }
+ if(params.get("tamper")==="1")await tamperRecord();
 }
 function renderLab(){
  const card=$("lab-card");
@@ -147,15 +165,20 @@ function renderLab(){
  card.dataset.state=stateName;
  $("lab-state").textContent=stateLabel;$("lab-core").textContent=core;$("lab-readout").textContent=headline;$("lab-caption").textContent=caption;
 }
-function exportRecord(){if(!state.record)return;const blob=new Blob([receiptText()],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
-function tamperRecord(){if(!state.record)return;state.tampered=true;$("record").textContent=JSON.stringify({...state.record,request:"tampered request",sha256:state.originalDigest},null,2);renderRecord()}
+function exportRecord(){if(!state.record)return;const blob=new Blob([receiptText()],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}${state.tampered?"-refused":""}.json`;link.click();URL.revokeObjectURL(link.href)}
+async function tamperRecord(){
+ if(!state.record)return;
+ const revision=++state.revision;
+ const changed={...state.record,request:"tampered request"};
+ const observed=await digest(changed);
+ if(revision!==state.revision)return;
+ state.record=changed;state.observedDigest=observed;state.tampered=observed!==state.originalDigest;renderRecord();
+}
 $("load-demo").addEventListener("click",()=>loadReports("passing").catch(error=>alert(error.message)));
 $("load-failure").addEventListener("click",()=>loadReports("failing").catch(error=>alert(error.message)));
 $("load-adversarial").addEventListener("click",()=>loadReports("adversarial").catch(error=>alert(error.message)));
 $("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);$("copy-receipt").addEventListener("click",copyReceipt);
 $("tamper").addEventListener("click",tamperRecord);
 $("copy-route").addEventListener("click",copyRoute);
-$("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});
-document.querySelectorAll("[data-phase-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.phaseAction;if(action==="load")$("load-demo").click();else if(action==="compose")$("compose").click();else if(action==="tamper")$("tamper").click();else $("reset").click()}));
-document.querySelectorAll("[data-guide-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.guideAction;if(action==="passing")$("load-demo").click();else if(action==="blocking")$("load-failure").click();else if(action==="adversarial")$("load-adversarial").click();else $("tamper").click()}));
+$("reset").addEventListener("click",()=>{state.revision++;state.scenario="passing";state.reports=[];state.record=null;state.originalDigest=null;state.observedDigest=null;state.tampered=false;renderReports();renderRecord()});
 renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());bootFromLocation().catch(error=>{console.warn(error.message)});
