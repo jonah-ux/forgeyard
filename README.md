@@ -179,7 +179,7 @@ synthetic review flow in a browser. It has five inspectable paths:
 
 - **Passing case:** MCP Doctor, Agent Proof, and Context Integrity Lab-style reports compose into `READY` evidence.
 - **Failing case:** an `MCP010` drift report composes into `BLOCKED` evidence.
-- **Adversarial matrix:** stale, denied, unenforced, partial, queued, and tampered signals stay visible and compose into `BLOCKED` evidence.
+- **Adversarial matrix:** fifteen classified stale, denied, unenforced, partial, malformed, traversal, leakage, drift, duplicate, unbounded, false-completion, and tampered signals stay visible and compose into `BLOCKED` evidence.
 - **Tamper case:** changing the sealed request produces `REFUSED` integrity state.
 - **Export case:** the composed JSON record downloads as a portable artifact.
 

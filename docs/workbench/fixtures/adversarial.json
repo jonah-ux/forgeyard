@@ -2,11 +2,20 @@
   "schema": "forgeyard-workbench-adversarial/v1",
   "scenario": "adversarial",
   "reports": [
-    {"name":"context-integrity-stale","schema":"context-integrity/v1","ok":false,"summary":"stale context refused","details":["status=stale","unknowns=no_fresh_records"]},
-    {"name":"agent-policy-deny","schema":"agent-policy/v1","ok":false,"summary":"deny-by-default policy stopped the request","details":["decision=deny","source=default_deny"]},
-    {"name":"agent-sandbox-fallback","schema":"agent-sandbox/v2","ok":false,"summary":"sandbox backend was not enforced","details":["backend=fallback","enforced=false"]},
-    {"name":"chatlens-partial","schema":"chatlens-trace-envelope/v1","ok":false,"summary":"partial trace remains unknown","details":["input=partial","status=unknown"]},
-    {"name":"atlas-queued","schema":"atlas-receipt/v1","ok":false,"summary":"queued lifecycle is not reviewable","details":["status=unknown","approval_not_observed"]},
-    {"name":"agent-proof-tampered","schema":"agent-proof/interop/v1","ok":false,"summary":"tampered proof projection refused","details":["digest=mismatch","source_state=invalid"]}
+    {"name":"context-integrity-stale","threat":"stale-source","schema":"context-integrity/v1","ok":false,"summary":"stale context refused","details":["status=stale","unknowns=no_fresh_records"]},
+    {"name":"agent-policy-deny","threat":"capability-denial","schema":"agent-policy/v1","ok":false,"summary":"deny-by-default policy stopped the request","details":["decision=deny","source=default_deny"]},
+    {"name":"agent-sandbox-fallback","threat":"unenforced-execution","schema":"agent-sandbox/v2","ok":false,"summary":"sandbox backend was not enforced","details":["backend=fallback","enforced=false"]},
+    {"name":"chatlens-partial","threat":"partial-input","schema":"chatlens-trace-envelope/v1","ok":false,"summary":"partial trace remains unknown","details":["input=partial","status=unknown"]},
+    {"name":"atlas-queued","threat":"unknown-lifecycle","schema":"atlas-receipt/v1","ok":false,"summary":"queued lifecycle is not reviewable","details":["status=unknown","approval_not_observed"]},
+    {"name":"agent-proof-tampered","threat":"tampered-bytes","schema":"agent-proof/interop/v1","ok":false,"summary":"tampered proof projection refused","details":["digest=mismatch","source_state=invalid"]},
+    {"name":"provenance-path-traversal","threat":"path-traversal","schema":"forgeyard-provenance-packet/v1","ok":false,"summary":"repository-relative path escaped its root","details":["path=../secret.txt","source_state=refused"]},
+    {"name":"provenance-symlink-escape","threat":"symlink-escape","schema":"forgeyard-provenance-packet/v1","ok":false,"summary":"symlink source was refused before sealing","details":["path=src/current.py","source_type=symlink"]},
+    {"name":"context-secret-leak","threat":"prompt-secret-leakage","schema":"context-integrity/v1","ok":false,"summary":"private field was not eligible for an evidence envelope","details":["field=api_key","redaction=required"]},
+    {"name":"agent-proof-schema-drift","threat":"schema-drift","schema":"agent-proof/interop/v2","ok":false,"summary":"unknown proof version was refused","details":["schema=unknown","compatibility=fail_closed"]},
+    {"name":"delivery-duplicate-evidence","threat":"duplicate-delivery","schema":"forgeyard-compose/v1","ok":false,"summary":"duplicate evidence identity was refused","details":["name=tests","identity=duplicate"]},
+    {"name":"source-identity-stale","threat":"stale-source-identity","schema":"ai-work-evidence/v1","ok":false,"summary":"evidence revision did not match the reviewed source","details":["evidence_revision=old","source_revision=current"]},
+    {"name":"mcp-doctor-partial-input","threat":"malformed-input","schema":"mcp-doctor/v1","ok":false,"summary":"incomplete contract report was refused","details":["field=description","validation=missing"]},
+    {"name":"agent-sandbox-unbounded-output","threat":"unbounded-output","schema":"agent-sandbox/v2","ok":false,"summary":"execution had no bounded output limit","details":["output_limit=missing","enforced=false"]},
+    {"name":"agent-resume-false-completion","threat":"false-completion","schema":"agent-resume/v1","ok":false,"summary":"completion claim disagreed with observed lifecycle","details":["claimed=complete","observed=running"]}
   ]
 }
