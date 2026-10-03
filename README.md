@@ -212,6 +212,14 @@ This repository is an independent public implementation of general patterns lear
 automation and agent tooling. It contains no employer source, customer data, credentials, private
 paths, production logs, or proprietary operating policy. See `PROVENANCE.md` for the boundary.
 
+### Verify a release
+
+Releases after v0.5.0 carry signed GitHub build provenance for the wheel and sdist, alongside `SHA256SUMS`. To check that a downloaded file was built by this repository's release workflow:
+
+```console
+gh attestation verify forgeyard-*.whl --repo jonah-ux/forgeyard
+```
+
 ## Interactive flagship
 
 Open the [Forgeyard Workbench](https://jonah-ux.github.io/forgeyard/) to run the
