@@ -24,6 +24,7 @@ from .core import (
     write_record,
     write_provenance_packet,
 )
+from .graph import build_graph_attachment, verify_graph_attachment
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,6 +76,14 @@ def build_parser() -> argparse.ArgumentParser:
     verify_packet = sub.add_parser("verify-packet", help="verify a portable provenance packet")
     verify_packet.add_argument("packet", type=Path)
     verify_packet.add_argument("--source-root", type=Path)
+    graph_attach = sub.add_parser("graph-attach", help="bind an Agent Proof graph summary to a provenance packet")
+    graph_attach.add_argument("packet", type=Path)
+    graph_attach.add_argument("graph", type=Path)
+    graph_attach.add_argument("--output", type=Path, required=True)
+    verify_graph = sub.add_parser("verify-graph-attachment", help="verify a packet/graph attachment")
+    verify_graph.add_argument("attachment", type=Path)
+    verify_graph.add_argument("--packet", type=Path)
+    verify_graph.add_argument("--graph", type=Path)
     return parser
 
 
@@ -184,6 +193,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "verify-packet":
         result = verify_provenance_packet(args.packet, args.source_root)
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result["ok"] else 1
+    if args.command == "graph-attach":
+        try:
+            attachment = build_graph_attachment(args.packet, args.graph)
+            args.output.write_text(json.dumps(attachment, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        except (OSError, ValueError) as exc:
+            print(json.dumps({"schema": "forgeyard-provenance-graph/v1", "status": "invalid", "error": str(exc)}))
+            return 2
+        print(json.dumps({"schema": "forgeyard-provenance-graph/v1", "attachment": str(args.output), "attachment_sha256": attachment["attachment_sha256"], "status": "written"}, sort_keys=True))
+        return 0
+    if args.command == "verify-graph-attachment":
+        result = verify_graph_attachment(args.attachment, packet=args.packet, graph=args.graph)
         print(json.dumps(result, sort_keys=True))
         return 0 if result["ok"] else 1
     return 2
