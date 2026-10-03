@@ -34,6 +34,12 @@ function renderMetrics(){
   $("metrics-list").innerHTML=metrics.metrics.map(metric=>`<article class="metric-card" data-direction="${metric.direction}"><div class="metric-top"><span class="metric-label">${metric.label}</span><span class="metric-direction">${metric.direction==="lower"?"LOWER IS BETTER":"CEILING"}</span></div><div class="metric-values"><div><small>BASELINE</small><strong>${metric.value}<em>${metric.unit}</em></strong></div><span class="metric-arrow">→</span><div><small>3× TARGET</small><strong>${metric.target}<em>${metric.unit}</em></strong></div></div><p>${metric.note}</p></article>`).join("");
   $("metrics-meta").textContent=`${metrics.protocol} · ${metrics.environment} · n=${metrics.sample_count} · ${metrics.guardrail} · receipt ${metrics.receipt}`;
 }
+function renderLaunch(){
+ const phase=state.tampered?"reset":state.record?"tamper":state.reports.length?"compose":"load";
+ const labels={load:["WAITING","Load a passing scenario to light up the review loop."],compose:["REPORTS READY","Compose the bounded decision when the inputs look right."],tamper:["SEALED","Simulate tamper to see the digest refuse changed bytes."],reset:["REFUSED","The displayed record changed. Reset and start a clean review."]};
+ $("launch-state").textContent=labels[phase][0];$("launch-hint").textContent=labels[phase][1];
+ document.querySelectorAll("[data-phase-action]").forEach(button=>{const action=button.dataset.phaseAction;button.setAttribute("aria-current",String(action===phase));button.disabled=action==="compose"&&!state.reports.length||action==="tamper"&&!state.record;});
+}
 function renderReports(){
  $("reports").innerHTML=state.reports.map((r,index)=>`<article class="report ${r.ok?"":"fail"}"><div class="report-top"><span class="report-name"><span class="report-index">${String(index+1).padStart(2,"0")}</span>${r.name}</span><span class="report-result ${r.ok?"":"fail"}">${r.ok?"PASS":"FAIL"}</span></div><div class="report-schema"><span class="schema-pill">${r.schema}</span> ${r.summary}</div><div class="report-schema report-details">${r.details.join(" · ")}</div></article>`).join("");
  $("specialist-count").textContent=state.reports.length;
@@ -42,6 +48,7 @@ function renderReports(){
  $("input-badge").textContent=state.reports.length?(state.scenario==="passing"?"PASSING":"REFUSAL"):"EMPTY";
  $("input-badge").className=`badge ${state.scenario==="passing"&&state.reports.length?"ok":state.reports.length?"bad":""}`;
  $("compose").disabled=!state.reports.length;
+ renderLaunch();
 }
 async function compose(){
  const record={schema:"forgeyard-compose/v1",task_id:`workbench-${state.scenario}`,repository:"synthetic-fixture",request:"review specialist reports",status:state.reports.every(r=>r.ok)?"ready_for_review":"blocked",evidence:state.reports.map(r=>({name:r.name,status:r.ok?"pass":"fail",detail:`schema=${r.schema}; ok=${r.ok}`,revision:"workbench-demo"})),boundary:"integrity is separate from outcome"};
@@ -61,6 +68,7 @@ function renderRecord(){
  const tone=r?(state.tampered||r.status!=="ready_for_review"?"bad":"ok"):"neutral";
  ["specialist-count","decision","integrity"].forEach(id=>$(id).closest(".status-card").dataset.tone=tone);
  $("tamper").disabled=!r;$("export").disabled=!r;
+ renderLaunch();
 }
 function exportRecord(){if(!state.record)return;const blob=new Blob([JSON.stringify({...state.record,sha256:state.originalDigest},null,2)+"\n"],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
 $("load-demo").addEventListener("click",()=>loadReports("passing").catch(error=>alert(error.message)));
@@ -68,4 +76,6 @@ $("load-failure").addEventListener("click",()=>loadReports("failing").catch(erro
 $("load-adversarial").addEventListener("click",()=>loadReports("adversarial").catch(error=>alert(error.message)));
 $("compose").addEventListener("click",compose);$("export").addEventListener("click",exportRecord);
 $("tamper").addEventListener("click",()=>{if(!state.record)return;state.tampered=true;$("record").textContent=JSON.stringify({...state.record,request:"tampered request",sha256:state.originalDigest},null,2);renderRecord()});
-$("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());
+$("reset").addEventListener("click",()=>{state.reports=[];state.record=null;state.tampered=false;renderReports();renderRecord()});
+document.querySelectorAll("[data-phase-action]").forEach(button=>button.addEventListener("click",()=>{const action=button.dataset.phaseAction;if(action==="load")$("load-demo").click();else if(action==="compose")$("compose").click();else if(action==="tamper")$("tamper").click();else $("reset").click()}));
+renderReports();renderRecord();renderMetrics();loadMetrics().catch(()=>renderMetrics());
