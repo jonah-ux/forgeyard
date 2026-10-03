@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Agent Systems Lab reference flow
+
+- Add an offline `forgeyard-reference-flow/v1` harness covering context admission, capability
+  policy, sandbox receipt, Atlas lifecycle, proof, resume, and Forgeyard verification.
+- Exercise reviewable, unknown-status blocked, and digest-tampered refusal outcomes with synthetic
+  owner-shaped reports and no external service dependency.
+
 ## Unreleased — Agent Systems Lab conformance corpus
 
 - Add a deterministic `ai-work-evidence/v1` corpus and runner covering valid, malformed, tampered,

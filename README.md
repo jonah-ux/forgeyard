@@ -42,6 +42,21 @@ Forgeyard is standalone by default: the CLI has no runtime dependencies and the 
 static fixture. Integrations such as MCP Doctor-style or Agent Proof-style reports are optional
 JSON inputs; no other repository, provider, database, credential, or local service is required.
 
+Run the offline Agent Systems Lab reference flow to see the same boundaries compose and refuse:
+
+```bash
+python scripts/run_reference_flow.py --scenario passing
+python scripts/run_reference_flow.py --scenario blocked
+python scripts/run_reference_flow.py --scenario tampered
+```
+
+The result is a `forgeyard-reference-flow/v1` receipt. It exercises context admission, capability
+policy, bounded sandboxing, Atlas lifecycle, proof, resume, and Forgeyard digest verification with
+synthetic owner-shaped reports. `passing` is reviewable; `blocked` preserves an unknown status;
+`tampered` refuses changed record bytes. Read the
+[reference-flow contract](docs/contracts/forgeyard-reference-flow-v1.md) for the exact boundary
+and limitations.
+
 Compose bounded reports from specialist tools such as MCP Doctor, Agent Proof, or Context Integrity Lab without copying their raw payloads into the task record. Agent Proof interop envelopes are accepted through their reviewed `projection.status.ok` field after source-bound verification:
 
 ```bash

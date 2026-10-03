@@ -30,6 +30,11 @@ creation and future resume adapters remain separate planned boundaries.
 
 The static `docs/workbench` page is a presentation and interaction layer over the same bounded contracts. Its synthetic reports cover MCP Doctor, Agent Proof, and Context Integrity Lab-style handoffs; they are intentionally local, while the CLI and provenance packet remain authoritative for real records.
 
+The checked-in `scripts/run_reference_flow.py` is the executable integration seam for the broader
+Agent Systems Lab. It keeps specialist schemas as synthetic inputs, then proves that context,
+policy, sandbox, Atlas, proof, resume, and Forgeyard compose through passing, unknown, and digest
+tamper outcomes without introducing a second registry or provider dependency.
+
 
 ## Quality receipt
 
