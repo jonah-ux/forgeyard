@@ -13,6 +13,7 @@ from .core import (
     EvidenceStatus,
     TaskRecord,
     TaskStatus,
+    _atomic_json_write,
     evidence_from_report,
     build_review_packet,
     create_worktree,
@@ -118,7 +119,11 @@ def main(argv: list[str] | None = None) -> int:
         for raw in args.evidence:
             record.add_evidence(parse_evidence(raw))
         record.finalize()
-        digest = write_record(record, args.output)
+        try:
+            digest = write_record(record, args.output)
+        except (OSError, ValueError) as exc:
+            print(json.dumps({"schema": "forgeyard-record/v1", "status": "invalid", "error": str(exc)}, sort_keys=True))
+            return 2
         print(json.dumps({"record": str(args.output), "sha256": digest, "status": record.status.value}))
         return 0 if record.status.value == "ready_for_review" else 2
     if args.command == "plan-worktree":
@@ -198,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "graph-attach":
         try:
             attachment = build_graph_attachment(args.packet, args.graph)
-            args.output.write_text(json.dumps(attachment, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            _atomic_json_write(args.output, attachment)
         except (OSError, ValueError) as exc:
             print(json.dumps({"schema": "forgeyard-provenance-graph/v1", "status": "invalid", "error": str(exc)}))
             return 2
