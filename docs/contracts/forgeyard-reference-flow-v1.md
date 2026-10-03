@@ -31,3 +31,27 @@ has adopted this script or that a production workflow is deployed.
 The script is intentionally a reference harness rather than a second protocol registry. Each
 specialist schema remains owned by its source repository, while Forgeyard owns the final bounded
 review record and digest verification.
+
+## Opt-in installed mode
+
+The same script has an opt-in `--mode installed` path for a real local package handoff. It consumes
+an owner-produced ChatLens trace and Atlas state file, invokes the installed `chatlens`, `atlas`,
+`agent-proof`, and `forgeyard` commands through an explicit command map, and records only versions,
+exit codes, and stdout/stderr digests:
+
+```bash
+python scripts/run_reference_flow.py \
+  --mode installed --scenario passing \
+  --chatlens-trace ./artifacts/chatlens.trace.jsonl \
+  --atlas-state ./artifacts/atlas-events.jsonl
+```
+
+The installed path runs `trace-import` and `evidence-export`, `atlas evidence`, Agent Proof
+`normalize`/`verify-interop`, and Forgeyard `compose`/`verify`. `blocked` changes only the synthetic
+Atlas evidence status to `unknown` after the owner command so the refusal path remains deliberate;
+`tampered` changes the composed record bytes after its digest is captured. Missing commands or
+owner artifacts produce `outcome=unavailable`; no fixture fallback is substituted.
+
+The installed receipt is `forgeyard-installed-reference-flow/v1`. It proves a local handoff against
+the supplied files and installed versions. It does not claim that the packages share a release
+lock, that an external user adopted them, or that any production workflow was deployed.

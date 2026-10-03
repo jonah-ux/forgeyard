@@ -35,6 +35,12 @@ Agent Systems Lab. It keeps specialist schemas as synthetic inputs, then proves 
 policy, sandbox, Atlas, proof, resume, and Forgeyard compose through passing, unknown, and digest
 tamper outcomes without introducing a second registry or provider dependency.
 
+Its opt-in installed mode consumes owner-produced ChatLens and Atlas artifacts and invokes the
+installed command map through ChatLens `trace-import`/`evidence-export`, Atlas `evidence`, Agent
+Proof `normalize`/`verify-interop`, and Forgeyard `compose`/`verify`. The default fixture path stays
+offline and deterministic; installed mode records only versions, exit codes, and output digests and
+returns `unavailable` when an owner command or artifact is missing.
+
 
 ## Quality receipt
 
