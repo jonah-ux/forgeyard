@@ -21,14 +21,14 @@ From a fresh clone:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python3 -m pip install -e .
 ```
 
 Forgeyard supports Python 3.11 or newer and has no runtime dependencies. If you
 already have an environment, the only install command you need is:
 
 ```bash
-python -m pip install -e .
+python3 -m pip install -e .
 ```
 
 ## 2. Run the whole story
@@ -38,7 +38,7 @@ in a temporary directory. It prints one JSON document and leaves no project file
 behind:
 
 ```bash
-forgeyard demo | python -m json.tool
+forgeyard demo | python3 -m json.tool
 ```
 
 Look for these three lines in the formatted output:
@@ -98,9 +98,9 @@ claim.
 For the same lifecycle in a terminal, run the checked-in reference harness:
 
 ```bash
-python scripts/run_reference_flow.py --scenario passing
-python scripts/run_reference_flow.py --scenario blocked
-python scripts/run_reference_flow.py --scenario tampered
+python3 scripts/run_reference_flow.py --scenario passing
+python3 scripts/run_reference_flow.py --scenario blocked
+python3 scripts/run_reference_flow.py --scenario tampered
 ```
 
 Each scenario returns zero when its expected result is observed and prints a

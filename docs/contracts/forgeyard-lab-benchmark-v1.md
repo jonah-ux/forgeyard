@@ -11,7 +11,7 @@ parse → validate → index → replay → compose → packet_verify
 Run it from a fresh checkout:
 
 ```bash
-python scripts/benchmark_lab.py --iterations 20 --warmup 3 --json
+python3 scripts/benchmark_lab.py --iterations 20 --warmup 3 --json
 ```
 
 The receipt records the fixed fixture schema, report count, byte count, dataset
