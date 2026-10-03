@@ -45,3 +45,5 @@ returns `unavailable` when an owner command or artifact is missing.
 ## Quality receipt
 
 `scripts/benchmark_compose.py` exercises the public CLI through a clean temporary report and record, then emits `forgeyard-benchmark/v1` with iteration count, median, p95 timings, and lower-is-better three-times latency targets. `scripts/benchmark_lab.py` adds a fixed nine-report dataset and measures parse, validation, indexing, replay, composition, and live provenance-packet verification as `forgeyard-lab-benchmark/v1`. The numbers are machine-local performance observations, not adoption or deployment claims. The Workbench publishes the current receipt in `docs/workbench/fixtures/metrics.json`; refresh that fixture only from a fresh benchmark run and keep `result=pass` plus `reviewable=true` as guardrails.
+
+The P3 `scripts/evaluate_lab.py` receipt adds deterministic correctness, refusal-operator coverage, source/dataset hashes, and optional published-artifact and offline-install observations. It leaves missing artifact/install inputs explicitly unavailable and keeps the existing benchmark as the performance layer.

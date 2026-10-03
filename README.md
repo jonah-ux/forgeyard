@@ -97,6 +97,11 @@ and provenance-packet verification. The receipt is versioned as
 [`forgeyard-lab-benchmark/v1`](docs/contracts/forgeyard-lab-benchmark-v1.md) and keeps timing
 claims explicitly machine-local.
 
+For the broader P3 evaluation receipt, run [`scripts/evaluate_lab.py`](scripts/evaluate_lab.py).
+It combines correctness, the 15-class refusal matrix, machine-local measurements, and optional
+wheel/sdist/checksum and offline install observations. Missing artifacts remain `unavailable`;
+the evaluation contract is [`forgeyard-evaluation/v1`](docs/contracts/forgeyard-evaluation-v1.md).
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.
