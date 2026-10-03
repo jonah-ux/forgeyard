@@ -1,0 +1,86 @@
+{
+  "schema": "forgeyard-installed-flow-release-lock/v1",
+  "owner": "forgeyard",
+  "flow_schema": "forgeyard-installed-reference-flow/v1",
+  "runtime": {
+    "language": "python",
+    "minimum": "3.11",
+    "consumer_observation": "python-3.14"
+  },
+  "command_map": {
+    "chatlens": "chatlens",
+    "atlas": "atlas",
+    "agent_proof": "agent-proof",
+    "forgeyard": "forgeyard"
+  },
+  "packages": [
+    {
+      "name": "agent-proof",
+      "repository": "https://github.com/jonah-ux/agent-proof",
+      "tag": "v0.4.1",
+      "commit": "de534b327f23b48d2b4e635525a258be85e5678f",
+      "channel": "prerelease",
+      "version": "0.4.1",
+      "cli": "agent-proof",
+      "native_schemas": ["agent-proof/interop/v1", "agent-proof/interop-verify/v1", "agent-systems-lab/compatibility/v1"],
+      "release": "https://github.com/jonah-ux/agent-proof/releases/tag/v0.4.1",
+      "artifacts": {
+        "wheel": {"name": "agent_proof-0.4.1-py3-none-any.whl", "sha256": "0249e7c5b425390b6b9587fbe6a720132052bb607b289b2afda805e3b0646538"},
+        "sdist": {"name": "agent_proof-0.4.1.tar.gz", "sha256": "a827b8bca22317fecc8dd9d7ffbb2c1e6d15d26f923f3d23a82a5d58f4d641ea"}
+      }
+    },
+    {
+      "name": "atlas-agent-runtime",
+      "repository": "https://github.com/jonah-ux/atlas-agent-runtime",
+      "tag": "v0.2.0",
+      "commit": "a3880417e78d2cee74f0974c4aac1b912fcbf880",
+      "channel": "prerelease",
+      "version": "0.2.0",
+      "cli": "atlas",
+      "native_schemas": ["atlas-receipt/v1", "ai-work-evidence/v1"],
+      "release": "https://github.com/jonah-ux/atlas-agent-runtime/releases/tag/v0.2.0",
+      "artifacts": {
+        "wheel": {"name": "atlas_agent_runtime-0.2.0-py3-none-any.whl", "sha256": "7e0c6e26bd944581a3ad57ba6bdc5e1c0f5a8a523a7f1220f8dabf9e8ff45c95"},
+        "sdist": {"name": "atlas_agent_runtime-0.2.0.tar.gz", "sha256": "cb21d88d8f25d0a93ab1b77c17031314be7ee538f36c2625fb390d3918817da9"}
+      }
+    },
+    {
+      "name": "chatlens",
+      "repository": "https://github.com/jonah-ux/chatlens",
+      "tag": "v0.4.0",
+      "commit": "8ec54ef89d201acdc0de2fe2ff3205b58f0273bc",
+      "channel": "stable",
+      "version": "0.4.0",
+      "cli": "chatlens",
+      "native_schemas": ["chatlens-trace-envelope/v1", "ai-work-evidence/v1"],
+      "release": "https://github.com/jonah-ux/chatlens/releases/tag/v0.4.0",
+      "artifacts": {
+        "wheel": {"name": "chatlens-0.4.0-py3-none-any.whl", "sha256": "f285f1f9fcf0034f7f4ac55c9c749ebd78bd8d45fb31e7decc78afb9f6d72de4"},
+        "sdist": {"name": "chatlens-0.4.0.tar.gz", "sha256": "d5857def91d634050f9f6875292b99c6843d48b6591ba109a7ed1dd4b7924219"}
+      }
+    },
+    {
+      "name": "forgeyard",
+      "repository": "https://github.com/jonah-ux/forgeyard",
+      "tag": "v0.5.0",
+      "commit": "6f3aa44cf1fdb1cf191d013cc74aa98cc98c7c50",
+      "channel": "prerelease",
+      "version": "0.5.0",
+      "cli": "forgeyard",
+      "native_schemas": ["ai-work-evidence/v1", "forgeyard-compose/v1", "forgeyard-installed-reference-flow/v1"],
+      "release": "https://github.com/jonah-ux/forgeyard/releases/tag/v0.5.0",
+      "artifacts": {
+        "wheel": {"name": "forgeyard-0.5.0-py3-none-any.whl", "sha256": "330fc1a1f0f7572d044e4930b4a4abf50a32770a9bcc2f2f7a7d4e189430b7e7"},
+        "sdist": {"name": "forgeyard-0.5.0.tar.gz", "sha256": "7e083a0c08d94c1f3385710eedd0d40ed20a8c370eead1e5667073b2cd944029"}
+      }
+    }
+  ],
+  "observation": {
+    "source_mode": "public-main-editable",
+    "runtime": "python-3.14",
+    "versions": {"chatlens": "0.4.0", "atlas": "0.2.0", "agent-proof": "0.4.1", "forgeyard": "0.5.0"},
+    "outcomes": ["reviewable", "blocked", "tampered-digest-refused"],
+    "observed_at": "2026-10-03",
+    "limitations": ["The consumer observation used public-main editable installs; release artifact hashes are locked separately.", "This lock covers four packages in the installed reference path, not all Agent Systems Lab owners.", "No deployment, production, or external-adoption claim is implied."]
+  }
+}

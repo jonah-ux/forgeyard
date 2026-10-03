@@ -55,3 +55,8 @@ owner artifacts produce `outcome=unavailable`; no fixture fallback is substitute
 The installed receipt is `forgeyard-installed-reference-flow/v1`. It proves a local handoff against
 the supplied files and installed versions. It does not claim that the packages share a release
 lock, that an external user adopted them, or that any production workflow was deployed.
+
+The four-package release lock is recorded separately in
+[`forgeyard-installed-flow-release-lock/v1`](forgeyard-installed-flow-release-lock-v1.md). It
+pins published artifact hashes and tagged commits while keeping the editable public-main consumer
+observation clearly labeled.
