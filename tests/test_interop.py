@@ -79,7 +79,8 @@ def test_validation_rejects_ambiguous_documents(field, value, message):
 
 
 def test_validation_rejects_unknown_fields_and_duplicate_artifacts(tmp_path: Path):
-    document = fixture_evidence(extra="secret")
+    document = fixture_evidence()
+    document["extra"] = "secret"
     with pytest.raises(ValueError, match="unknown fields"):
         validate_evidence(document)
     artifact = {"name": "trace.jsonl", "size": 1, "sha256": "0" * 64}
