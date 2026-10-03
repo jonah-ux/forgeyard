@@ -102,6 +102,11 @@ It combines correctness, the 15-class refusal matrix, machine-local measurements
 wheel/sdist/checksum and offline install observations. Missing artifacts remain `unavailable`;
 the evaluation contract is [`forgeyard-evaluation/v1`](docs/contracts/forgeyard-evaluation-v1.md).
 
+For the public supply-chain and privacy surface, run [`scripts/audit_public_surface.py`](scripts/audit_public_surface.py).
+It inventories dependencies and license markers, checks release provenance files, scans tracked text
+for high-signal secret patterns, and optionally verifies published artifacts. The audit contract is
+[`forgeyard-public-audit/v1`](docs/contracts/forgeyard-public-audit-v1.md).
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.

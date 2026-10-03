@@ -20,3 +20,5 @@ jobs:
         run: python scripts/benchmark_compose.py --iterations 3 --json
       - name: run reproducible evaluation receipt
         run: python scripts/evaluate_lab.py --iterations 3 --warmup 1 --json
+      - name: audit public supply-chain surface
+        run: python scripts/audit_public_surface.py --json
