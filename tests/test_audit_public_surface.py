@@ -44,3 +44,44 @@ def test_public_audit_blocks_checksum_mismatch(tmp_path):
     report = module.audit(tmp_path)
     assert report["artifact_audit"]["state"] == "blocked"
     assert report["result"] == "blocked"
+
+
+def test_public_audit_rejects_incomplete_requested_artifacts_and_comment_markers(tmp_path):
+    module = _module()
+    assert module.audit(require_dist=True)["result"] == "blocked"
+    assert module.audit(tmp_path)["result"] == "blocked"
+    (tmp_path / "demo.whl").write_bytes(b"wheel")
+    (tmp_path / "demo.tar.gz").write_bytes(b"sdist")
+    (tmp_path / "SHA256SUMS").write_text("garbage\n", encoding="utf-8")
+    assert module.audit(tmp_path)["result"] == "blocked"
+    original_root = module.ROOT
+    try:
+        module.ROOT = tmp_path
+        (tmp_path / ".github" / "workflows").mkdir(parents=True)
+        (tmp_path / ".github" / "workflows" / "release.yml").write_text("# SHA256SUMS refs/tags build gh release\n", encoding="utf-8")
+        (tmp_path / "PROVENANCE.md").write_text("public provenance", encoding="utf-8")
+        (tmp_path / "SECURITY.md").write_text("public security", encoding="utf-8")
+        assert module._release_provenance()["state"] == "blocked"
+    finally:
+        module.ROOT = original_root
+
+
+def test_public_audit_blocks_empty_tracked_file_scan():
+    module = _module()
+    original = module._tracked_files
+    module._tracked_files = lambda: []
+    try:
+        assert module._secret_scan()["state"] == "blocked"
+    finally:
+        module._tracked_files = original
+
+
+def test_public_audit_blocks_structurally_invalid_project_metadata(tmp_path):
+    module = _module()
+    original_root = module.ROOT
+    try:
+        module.ROOT = tmp_path
+        (tmp_path / "pyproject.toml").write_text('project = "malformed"\n[build-system]\nrequires = []\n', encoding="utf-8")
+        assert module._dependency_inventory()["state"] == "blocked"
+    finally:
+        module.ROOT = original_root
