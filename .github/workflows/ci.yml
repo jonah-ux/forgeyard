@@ -18,3 +18,5 @@ jobs:
       - run: python -m compileall -q src tests
       - name: benchmark public compose path
         run: python scripts/benchmark_compose.py --iterations 3 --json
+      - name: run reproducible evaluation receipt
+        run: python scripts/evaluate_lab.py --iterations 3 --warmup 1 --json
