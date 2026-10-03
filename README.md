@@ -154,6 +154,20 @@ source root cannot produce an `ok` result. The packet remains portable for trans
 but a reviewer must provide the live `--source-root` to turn its embedded seals into a fresh result.
 The packet contains task and evidence details supplied by the caller; do not put secrets in records.
 
+Attach an Agent Proof provenance graph as a bounded sidecar without changing the packet schema:
+
+```console
+forgeyard graph-attach ./artifacts/review.provenance.json ./artifacts/run-proof.graph.json \
+  --output ./artifacts/review.graph-attachment.json
+forgeyard verify-graph-attachment ./artifacts/review.graph-attachment.json \
+  --packet ./artifacts/review.provenance.json --graph ./artifacts/run-proof.graph.json
+```
+
+The `forgeyard-provenance-graph/v1` sidecar stores the packet digest, graph digest, input digest,
+node/edge counts, and a redaction marker. It does not copy graph nodes, edges, paths, commands, or
+source payloads. Agent Proof remains the semantic graph verifier; Forgeyard verifies the packet and
+graph binding and refuses changed or missing source-bound inputs.
+
 ## Design boundaries
 
 - The core does not call a model provider or execute shell commands.
