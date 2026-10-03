@@ -7,6 +7,13 @@
 - Exercise reviewable, unknown-status blocked, and digest-tampered refusal outcomes with synthetic
   owner-shaped reports and no external service dependency.
 
+## Unreleased — Agent Systems Lab benchmark
+
+- Add `forgeyard-lab-benchmark/v1` for fixed-dataset parse, validation, indexing, replay,
+  composition, and provenance-packet verification measurements.
+- Record dataset identity, runtime bounds, reviewability/privacy guards, and explicit machine-local
+  limitations alongside operation timings.
+
 ## Unreleased — Agent Systems Lab conformance corpus
 
 - Add a deterministic `ai-work-evidence/v1` corpus and runner covering valid, malformed, tampered,
