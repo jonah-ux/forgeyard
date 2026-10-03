@@ -69,6 +69,23 @@ function renderRecord(){
  ["specialist-count","decision","integrity"].forEach(id=>$(id).closest(".status-card").dataset.tone=tone);
  $("tamper").disabled=!r;$("export").disabled=!r;
  renderLaunch();
+ renderLab();
+}
+function renderLab(){
+ const card=$("lab-card");
+ if(!card)return;
+ let stateName="standby";let stateLabel="STANDBY";let core="0";let headline="Waiting for a synthetic scenario";let caption="Load a case to wake the evidence field.";
+ if(state.tampered){
+  stateName="refused";stateLabel="BYTE REFUSAL";core="!";headline="The seal caught a changed byte";caption="The displayed request no longer matches its original digest.";
+ }else if(state.record){
+  const ready=state.record.status==="ready_for_review";
+  stateName=ready?"ready":"blocked";stateLabel=ready?"READY TO REVIEW":"FAIL CLOSED";core=String(state.reports.length);headline=ready?"Every supplied signal cleared":"A specialist signal stopped the record";caption=ready?"Reviewable evidence is sealed; outcome and integrity stay separate.":"The record stays blocked until the failed signal is resolved.";
+ }else if(state.reports.length){
+  const passing=state.scenario==="passing";
+  stateName="armed";stateLabel=passing?"SIGNAL LOCK":"FAULT PATH";core=String(state.reports.length);headline=passing?"The evidence field is armed":"A refusal path is waiting";caption=passing?"Compose to seal the passing synthetic record.":"Compose to see the boundary hold under a failing fixture.";
+ }
+ card.dataset.state=stateName;
+ $("lab-state").textContent=stateLabel;$("lab-core").textContent=core;$("lab-readout").textContent=headline;$("lab-caption").textContent=caption;
 }
 function exportRecord(){if(!state.record)return;const blob=new Blob([JSON.stringify({...state.record,sha256:state.originalDigest},null,2)+"\n"],{type:"application/json"});const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${state.record.task_id}.json`;link.click();URL.revokeObjectURL(link.href)}
 $("load-demo").addEventListener("click",()=>loadReports("passing").catch(error=>alert(error.message)));
