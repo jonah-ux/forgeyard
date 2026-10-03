@@ -5,7 +5,7 @@ the public Forgeyard checkout without contacting providers or reading private
 state:
 
 ```bash
-python scripts/audit_public_surface.py --json
+python3 scripts/audit_public_surface.py --json
 ```
 
 The receipt contains:

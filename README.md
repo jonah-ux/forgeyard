@@ -17,9 +17,9 @@ walkthrough. It covers install, a passing demo, an intentional failure, and the
 interactive Workbench without requiring any outside service.
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python3 -m pip install -e .
 forgeyard create \
   --task-id demo-001 \
   --repository fixture-repo \
@@ -45,9 +45,9 @@ JSON inputs; no other repository, provider, database, credential, or local servi
 Run the offline Agent Systems Lab reference flow to see the same boundaries compose and refuse:
 
 ```bash
-python scripts/run_reference_flow.py --scenario passing
-python scripts/run_reference_flow.py --scenario blocked
-python scripts/run_reference_flow.py --scenario tampered
+python3 scripts/run_reference_flow.py --scenario passing
+python3 scripts/run_reference_flow.py --scenario blocked
+python3 scripts/run_reference_flow.py --scenario tampered
 ```
 
 The result is a `forgeyard-reference-flow/v1` receipt. It exercises context admission, capability
@@ -61,7 +61,7 @@ For a real local package handoff, use the opt-in installed mode with owner-produ
 artifacts:
 
 ```bash
-python scripts/run_reference_flow.py --mode installed --scenario passing \
+python3 scripts/run_reference_flow.py --mode installed --scenario passing \
   --chatlens-trace ./artifacts/chatlens.trace.jsonl \
   --atlas-state ./artifacts/atlas-events.jsonl
 ```
@@ -89,7 +89,7 @@ envelope whose `projection.status.ok` field is boolean. Forgeyard stores only th
 schema label, the boolean result, and the optional revision; the specialist payload remains in
 its own file. A false result blocks the record, and malformed or missing `ok` values are rejected.
 
-The public compose contract is documented in [`docs/contracts/forgeyard-compose-v1.md`](docs/contracts/forgeyard-compose-v1.md). Run the bounded CLI quality receipt with `python scripts/benchmark_compose.py --json`; it measures the same compose and verify path used by the Workbench story.
+The public compose contract is documented in [`docs/contracts/forgeyard-compose-v1.md`](docs/contracts/forgeyard-compose-v1.md). Run the bounded CLI quality receipt with `python3 scripts/benchmark_compose.py --json`; it measures the same compose and verify path used by the Workbench story.
 
 For the broader local lab measurement, run [`scripts/benchmark_lab.py`](scripts/benchmark_lab.py).
 It uses a fixed nine-report synthetic dataset and measures parse, validate, index, replay, compose,

@@ -12,9 +12,9 @@ context admission → capability policy → sandbox receipt → Atlas lifecycle
 Run the three expected outcomes from a fresh checkout:
 
 ```bash
-python scripts/run_reference_flow.py --scenario passing
-python scripts/run_reference_flow.py --scenario blocked
-python scripts/run_reference_flow.py --scenario tampered
+python3 scripts/run_reference_flow.py --scenario passing
+python3 scripts/run_reference_flow.py --scenario blocked
+python3 scripts/run_reference_flow.py --scenario tampered
 ```
 
 Every command prints `forgeyard-reference-flow/v1` JSON and returns zero when the expected behavior
@@ -40,7 +40,7 @@ an owner-produced ChatLens trace and Atlas state file, invokes the installed `ch
 exit codes, and stdout/stderr digests:
 
 ```bash
-python scripts/run_reference_flow.py \
+python3 scripts/run_reference_flow.py \
   --mode installed --scenario passing \
   --chatlens-trace ./artifacts/chatlens.trace.jsonl \
   --atlas-state ./artifacts/atlas-events.jsonl

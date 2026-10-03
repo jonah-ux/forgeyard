@@ -6,7 +6,7 @@ existing deterministic `forgeyard-lab-benchmark/v1` receipt with the public
 observations.
 
 ```bash
-python scripts/evaluate_lab.py --json
+python3 scripts/evaluate_lab.py --json
 ```
 
 The default run reports:
