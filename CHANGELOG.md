@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Workbench review experience
+
+- Consolidate the synthetic review loop into one control deck and place the receipt
+  before the dated local benchmark snapshot.
+- Recalculate SHA-256 after tampering, keep changed bytes visible in display/copy/export,
+  and expose sealed versus observed digests.
+- Preserve composed states in shared routes and cancel stale asynchronous results after
+  reset or scenario changes.
+- Add dependency-free JavaScript regression coverage for the Workbench receipt lifecycle.
+
 ## 0.5.0 — Agent Systems Lab reference flow and benchmark (unreleased)
 
 - Add an offline `forgeyard-reference-flow/v1` harness covering context admission, capability
