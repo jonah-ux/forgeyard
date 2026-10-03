@@ -7,8 +7,8 @@ real repository data to fixtures.
 Before opening a pull request, run:
 
 ```bash
-python -m pytest -q
-python -m compileall -q src tests
+python3 -m pytest -q
+python3 -m compileall -q src tests
 git diff --check
 ```
 

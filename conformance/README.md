@@ -7,7 +7,7 @@ validator result and, for valid documents, the status Forgeyard should expose wh
 Run the deterministic report from the repository root:
 
 ```bash
-python scripts/run_interop_conformance.py --json
+python3 scripts/run_interop_conformance.py --json
 ```
 
 The runner is a local compatibility check, not proof of deployment, adoption, or a user-visible
