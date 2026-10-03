@@ -76,6 +76,12 @@ its own file. A false result blocks the record, and malformed or missing `ok` va
 
 The public compose contract is documented in [`docs/contracts/forgeyard-compose-v1.md`](docs/contracts/forgeyard-compose-v1.md). Run the bounded CLI quality receipt with `python scripts/benchmark_compose.py --json`; it measures the same compose and verify path used by the Workbench story.
 
+For the broader local lab measurement, run [`scripts/benchmark_lab.py`](scripts/benchmark_lab.py).
+It uses a fixed nine-report synthetic dataset and measures parse, validate, index, replay, compose,
+and provenance-packet verification. The receipt is versioned as
+[`forgeyard-lab-benchmark/v1`](docs/contracts/forgeyard-lab-benchmark-v1.md) and keeps timing
+claims explicitly machine-local.
+
 The command prints JSON containing the record path, its SHA-256 digest, and `ready_for_review`.
 If any evidence is `fail`, `unknown`, or `skipped`, the record is `blocked` and the command exits
 with status 2. A record is not a merge, deployment, or production verification claim.
