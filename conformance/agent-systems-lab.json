@@ -6,8 +6,8 @@
     "ai-work-evidence/v1",
     "forgeyard-compose/v1",
     "forgeyard-evidence-receipt/v1",
-    "forgeyard-provenance-packet/v1",
     "forgeyard-provenance-packet-verify/v1",
+    "forgeyard-provenance-packet/v1",
     "forgeyard-record-verify/v1",
     "forgeyard-review-packet/v1",
     "forgeyard-runtime-evaluation/v1"
@@ -23,8 +23,8 @@
     "evaluation.refusals": ["forgeyard-runtime-evaluation/v1"],
     "provenance.packet": [
       "forgeyard-evidence-receipt/v1",
-      "forgeyard-provenance-packet/v1",
-      "forgeyard-provenance-packet-verify/v1"
+      "forgeyard-provenance-packet-verify/v1",
+      "forgeyard-provenance-packet/v1"
     ],
     "review.compose": ["forgeyard-compose/v1", "forgeyard-review-packet/v1"],
     "review.verify": ["forgeyard-record-verify/v1"],
