@@ -1,4 +1,5 @@
 import json
+import copy
 import pytest
 
 from forgeyard import core, evaluation, interop
@@ -93,3 +94,19 @@ def test_empty_or_truncated_corpus_blocks_the_native_suite_and_cli(monkeypatch, 
     assert evaluation.is_passing_runtime_evaluation(report) is False
     assert main(["evaluate-refusals"]) == 2
     assert json.loads(capsys.readouterr().out)["result"] == "blocked"
+
+
+@pytest.mark.parametrize("field", ["package_version", "python", "implementation_sha256", "suite_sha256"])
+def test_passing_receipt_requires_implementation_and_runtime_metadata(field):
+    report = evaluation.run_refusal_evaluation()
+    del report[field]
+    assert evaluation.is_passing_runtime_evaluation(report) is False
+
+
+def test_missing_case_error_marker_and_malformed_digest_are_not_passing_receipts():
+    report = evaluation.run_refusal_evaluation()
+    missing = copy.deepcopy(report)
+    del missing["cases"][0]["error_type"]
+    assert evaluation.is_passing_runtime_evaluation(missing) is False
+    report["implementation_sha256"]["core"] = "not-a-digest"
+    assert evaluation.is_passing_runtime_evaluation(report) is False

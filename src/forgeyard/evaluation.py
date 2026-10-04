@@ -219,12 +219,21 @@ def is_passing_runtime_evaluation(report):
     """Require the complete reviewed corpus, not a caller's success label."""
     if not isinstance(report, dict) or report.get("schema") != SCHEMA or report.get("result") != "pass":
         return False
+    if any(not isinstance(report.get(key), str) or not 1 <= len(report[key]) <= 64
+           for key in ("package_version", "python")):
+        return False
+    implementation = report.get("implementation_sha256")
+    if (not core._is_sha256(report.get("suite_sha256")) or not isinstance(implementation, dict)
+            or set(implementation) != {"core", "interop"}
+            or not all(core._is_sha256(value) for value in implementation.values())):
+        return False
     cases = report.get("cases")
     if not isinstance(cases, list) or len(cases) != CASE_COUNT or type(report.get("executed")) is not int or report["executed"] != CASE_COUNT:
         return False
     specifications = []
     for case in cases:
-        if not isinstance(case, dict) or case.get("executed") is not True or case.get("ok") is not True or case.get("error_type") is not None:
+        if (not isinstance(case, dict) or case.get("executed") is not True or case.get("ok") is not True
+                or "error_type" not in case or case["error_type"] is not None):
             return False
         if any(not isinstance(case.get(key), str) for key in ("name", "expected", "observed", "boundary")) or case["observed"] != case["expected"]:
             return False
