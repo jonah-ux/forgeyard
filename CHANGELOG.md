@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 — executable native evaluation
+
+- Execute native record, projection, review, and provenance boundaries through
+  `forgeyard evaluate-refusals`, including a passing control and stale, tampered,
+  unbound, malformed, duplicate, and unsafe source cases.
+- Keep the Workbench fixture catalogue separate from executed case evidence.
+- Block the lab evaluation when requested artifact or installation checks fail;
+  compare the fresh offline wheel consumer with the current native implementation.
+- Exercise wheel and source consumers outside the checkout during CI and release.
+
 ## Unreleased — Workbench review experience
 
 - Consolidate the synthetic review loop into one control deck and place the receipt

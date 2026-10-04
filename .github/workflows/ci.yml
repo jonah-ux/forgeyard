@@ -6,18 +6,23 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: test workbench receipt behavior
         run: node --test tests/workbench-runtime.test.cjs
-      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pip install --upgrade pip pytest build
       - run: python -m pip install -e .
       - run: python -m pytest -q
       - run: python -m compileall -q src tests
@@ -27,3 +32,20 @@ jobs:
         run: python scripts/evaluate_lab.py --iterations 3 --warmup 1 --json
       - name: audit public supply-chain surface
         run: python scripts/audit_public_surface.py --json
+      - name: build distributions and verify offline wheel consumer
+        run: |
+          python -m build --sdist --wheel
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          assets = sorted(Path("dist").glob("*.whl")) + sorted(Path("dist").glob("*.tar.gz"))
+          Path("dist/SHA256SUMS").write_text("".join(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n" for p in assets))
+          PY
+          python scripts/evaluate_lab.py --iterations 1 --warmup 0 --dist-dir ./dist --install --json
+      - name: verify fresh source consumer outside the checkout
+        run: |
+          python -m venv "${RUNNER_TEMP}/forgeyard-source-consumer"
+          "${RUNNER_TEMP}/forgeyard-source-consumer/bin/python" -m pip install --no-deps dist/*.tar.gz
+          cd "${RUNNER_TEMP}"
+          env -u PYTHONPATH ./forgeyard-source-consumer/bin/python -I -c 'from pathlib import Path; import sys, forgeyard; assert Path(forgeyard.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())'
+          env -u PYTHONPATH ./forgeyard-source-consumer/bin/forgeyard evaluate-refusals

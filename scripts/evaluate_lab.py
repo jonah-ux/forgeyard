@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import re
@@ -25,18 +26,15 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
 from benchmark_lab import run_benchmark  # noqa: E402
+from audit_public_surface import _artifact_audit  # noqa: E402
+from forgeyard.evaluation import is_passing_runtime_evaluation, run_refusal_evaluation  # noqa: E402
 
 
 SCHEMA = "forgeyard-evaluation/v1"
-_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
-
-def _file_digest(path: Path) -> str:
-    return _digest(path.read_bytes())
 
 
 def _source_revision() -> str | None:
@@ -68,7 +66,7 @@ def _correctness(iterations: int, warmup: int) -> tuple[dict[str, Any], dict[str
     }, benchmark
 
 
-def _refusal_coverage() -> dict[str, Any]:
+def _fixture_catalog() -> dict[str, Any]:
     path = ROOT / "docs" / "workbench" / "fixtures" / "adversarial.json"
     try:
         raw = path.read_bytes()
@@ -76,7 +74,7 @@ def _refusal_coverage() -> dict[str, Any]:
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return {"state": "blocked", "error": str(exc)}
     reports = payload.get("reports") if isinstance(payload, dict) else None
-    if payload.get("schema") != "forgeyard-workbench-adversarial/v1" or not isinstance(reports, list):
+    if not isinstance(payload, dict) or payload.get("schema") != "forgeyard-workbench-adversarial/v1" or not isinstance(reports, list):
         return {"state": "blocked", "error": "adversarial fixture schema or reports are invalid"}
     threats = [report.get("threat") for report in reports if isinstance(report, dict)]
     names = [report.get("name") for report in reports if isinstance(report, dict)]
@@ -84,6 +82,7 @@ def _refusal_coverage() -> dict[str, Any]:
         bool(reports)
         and len(threats) == len(reports)
         and all(isinstance(value, str) and value for value in threats)
+        and all(isinstance(value, str) and value for value in names)
         and len(set(threats)) == len(threats)
         and len(set(names)) == len(names)
         and all(report.get("ok") is False for report in reports if isinstance(report, dict))
@@ -92,49 +91,43 @@ def _refusal_coverage() -> dict[str, Any]:
         "state": "pass" if valid else "blocked",
         "schema": payload.get("schema"),
         "reports": len(reports),
-        "unique_threats": len(set(threats)),
-        "mutation_operators": sorted(set(threats)),
+        "unique_threats": len(set(value for value in threats if isinstance(value, str))),
+        "mutation_operators": sorted(set(value for value in threats if isinstance(value, str))),
         "fixture_sha256": _digest(raw),
     }
 
 
-def _read_checksums(path: Path) -> dict[str, str]:
-    checksums: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        parts = line.split()
-        if len(parts) < 2 or not _SHA256.fullmatch(parts[0]):
-            continue
-        checksums[Path(parts[-1]).name] = parts[0]
-    return checksums
-
-
-def _artifact_observation(dist_dir: Path | None) -> dict[str, Any]:
-    if dist_dir is None:
-        return {"state": "unavailable", "reason": "dist_dir_not_provided"}
-    if not dist_dir.is_dir():
-        return {"state": "unavailable", "reason": "dist_dir_missing"}
-    assets = sorted(path for path in dist_dir.iterdir() if path.is_file() and path.suffix in {".whl", ".gz"})
-    sums_path = dist_dir / "SHA256SUMS"
-    if not assets or not sums_path.is_file():
-        return {"state": "unavailable", "reason": "wheel_sdist_or_checksums_missing"}
-    checksums = _read_checksums(sums_path)
-    mismatches: list[str] = []
-    observations: list[dict[str, Any]] = []
-    for path in assets:
-        actual = _file_digest(path)
-        expected = checksums.get(path.name)
-        if expected != actual:
-            mismatches.append(path.name)
-        observations.append({"name": path.name, "bytes": path.stat().st_size, "sha256": actual})
+def _refusal_coverage() -> dict[str, Any]:
+    catalog = _fixture_catalog()
+    runtime = run_refusal_evaluation()
+    if not isinstance(runtime, dict):
+        runtime = {"result": "blocked", "cases": [], "reason": "invalid_runtime_receipt"}
+    runtime_cases = runtime.get("cases")
+    if not isinstance(runtime_cases, list):
+        runtime_cases = []
     return {
-        "state": "pass" if not mismatches and len(assets) >= 2 else "blocked",
-        "assets": observations,
-        "checksum_manifest_sha256": _file_digest(sums_path),
-        "mismatches": mismatches,
+        "state": "pass" if catalog["state"] == "pass" and is_passing_runtime_evaluation(runtime) else "blocked",
+        "fixture_state": catalog["state"],
+        "fixture_sha256": catalog.get("fixture_sha256"),
+        "fixture_catalog": catalog,
+        "runtime": runtime,
+        # Retain v1 catalog fields; runtime evidence is explicit and separate.
+        "schema": catalog.get("schema"),
+        "reports": catalog.get("reports", 0),
+        "unique_threats": catalog.get("unique_threats", 0),
+        "mutation_operators": catalog.get("mutation_operators", []),
+        "executed_operators": [case["name"] for case in runtime_cases
+                               if isinstance(case, dict) and isinstance(case.get("name"), str)
+                               and case["name"] != "positive-control"],
     }
 
 
-def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], install: bool) -> dict[str, Any]:
+def _artifact_observation(dist_dir: Path | None) -> dict[str, Any]:
+    return _artifact_audit(dist_dir)
+
+
+def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], install: bool,
+                         expected_runtime: dict[str, Any]) -> dict[str, Any]:
     if not install:
         return {"state": "unavailable", "reason": "install_not_requested"}
     if artifact.get("state") != "pass":
@@ -142,29 +135,54 @@ def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], instal
     wheel = next((item["name"] for item in artifact["assets"] if item["name"].endswith(".whl")), None)
     if not wheel or dist_dir is None:
         return {"state": "unavailable", "reason": "wheel_missing"}
+    wheel_path = (dist_dir / wheel).resolve()
     with tempfile.TemporaryDirectory(prefix="forgeyard-evaluation-install-") as directory:
         venv = Path(directory) / "venv"
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
         try:
-            create = subprocess.run([sys.executable, "-m", "venv", str(venv)], capture_output=True, text=True, check=False)
+            create = subprocess.run([sys.executable, "-m", "venv", str(venv)], capture_output=True, text=True, check=False, timeout=60)
             if create.returncode != 0:
                 return {"state": "blocked", "reason": "venv_creation_failed", "exit_code": create.returncode}
             python = venv / "bin" / "python"
             result = subprocess.run(
-                [str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(dist_dir / wheel)],
+                [str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel_path)],
                 capture_output=True,
                 text=True,
                 check=False,
+                cwd=directory,
+                env=environment,
+                timeout=90,
             )
-            version = subprocess.run([str(venv / "bin" / "forgeyard"), "--version"], capture_output=True, text=True, check=False)
-        except OSError as exc:
-            return {"state": "blocked", "reason": str(exc)}
+            if result.returncode != 0:
+                return {"state": "blocked", "reason": "offline_install_failed", "exit_code": result.returncode}
+            identity = subprocess.run(
+                [str(python), "-I", "-c", "from pathlib import Path; import sys, forgeyard; assert Path(forgeyard.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())"],
+                capture_output=True, text=True, check=False, cwd=directory, env=environment, timeout=15,
+            )
+            version = subprocess.run([str(venv / "bin" / "forgeyard"), "--version"], capture_output=True, text=True, check=False, cwd=directory, env=environment, timeout=15)
+            runtime = subprocess.run([str(venv / "bin" / "forgeyard"), "evaluate-refusals"], capture_output=True, text=True, check=False, cwd=directory, env=environment, timeout=30)
+            receipt = json.loads(runtime.stdout)
+            runtime_ok = (
+                is_passing_runtime_evaluation(receipt) and is_passing_runtime_evaluation(expected_runtime)
+                and receipt["cases"] == expected_runtime.get("cases")
+                and type(receipt.get("executed")) is int and receipt["executed"] == len(receipt["cases"])
+                and all(receipt.get(key) == expected_runtime.get(key) for key in (
+                    "package_version", "corpus_sha256", "implementation_sha256", "suite_sha256"))
+                and version.stdout.strip() == expected_runtime.get("package_version")
+            )
+        except (OSError, json.JSONDecodeError, subprocess.TimeoutExpired):
+            return {"state": "blocked", "reason": "consumer_invocation_or_receipt_failed"}
     return {
-        "state": "pass" if result.returncode == 0 and version.returncode == 0 else "blocked",
+        "state": "pass" if identity.returncode == 0 and version.returncode == 0 and runtime.returncode == 0 and runtime_ok else "blocked",
         "install_exit_code": result.returncode,
         "version_exit_code": version.returncode,
         "version": version.stdout.strip()[:160] if version.returncode == 0 else None,
         "stdout_sha256": _digest(result.stdout.encode("utf-8")),
         "stderr_sha256": _digest(result.stderr.encode("utf-8")),
+        "installed_origin_verified": identity.returncode == 0,
+        "runtime_exit_code": runtime.returncode,
+        "runtime_evaluation": receipt if runtime_ok else None,
     }
 
 
@@ -172,7 +190,7 @@ def evaluate(iterations: int = 5, warmup: int = 1, dist_dir: Path | None = None,
     correctness, benchmark = _correctness(iterations, warmup)
     refusal = _refusal_coverage()
     artifact = _artifact_observation(dist_dir)
-    install_result = _install_observation(dist_dir, artifact, install)
+    install_result = _install_observation(dist_dir, artifact, install, refusal["runtime"])
     observations = {
         "correctness": correctness,
         "refusal": refusal,
@@ -191,7 +209,11 @@ def evaluate(iterations: int = 5, warmup: int = 1, dist_dir: Path | None = None,
             "refusal": {"fixture": "forgeyard-workbench-adversarial/v1", "sha256": refusal.get("fixture_sha256")},
         },
         "observations": observations,
-        "result": "pass" if correctness.get("state") == "pass" and refusal.get("state") == "pass" else "blocked",
+        "result": "pass" if (
+            correctness.get("state") == "pass" and refusal.get("state") == "pass"
+            and (dist_dir is None or artifact.get("state") == "pass")
+            and (not install or install_result.get("state") == "pass")
+        ) else "blocked",
         "limits": [
             "performance values are machine-local observations",
             "artifact and install observations are unavailable unless --dist-dir and --install are supplied",
