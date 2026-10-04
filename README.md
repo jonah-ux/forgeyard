@@ -6,9 +6,9 @@ Forgeyard is a small local-first foundation for running software tasks in isolat
 was tested, and refusing to call a task complete when its evidence contains a failure or an
 unknown result.
 
-The first vertical slice is intentionally narrow: it defines a durable task record and a
-machine-readable evidence contract before adding worktree execution, provider adapters, or a web
-interface. That order keeps the truth model testable.
+Forgeyard provides a durable task record, a machine-readable evidence contract, and bounded
+worktree planning and creation. Its static workbench illustrates the review flow; provider
+adapters and command execution are separate future work.
 
 ## Quick start
 
@@ -196,7 +196,7 @@ graph binding and refuses changed or missing source-bound inputs.
 - The record is JSON so other agents and CI systems can consume it without scraping prose.
 - Evidence receipts are explicit, source-bound, and revision-bound; a provenance packet cannot
   silently substitute a different receipt or source tree.
-- Later work will add isolated worktrees and bounded command execution behind these contracts.
+- Worktree planning and creation are available; bounded command execution remains planned.
 
 The second slice now admits a worktree plan without mutating anything:
 
@@ -217,8 +217,8 @@ run an agent, alter the source checkout, or claim that the resulting task is tes
 
 ## Status
 
-This is an early public foundation. Worktree isolation, command capture, resume, and cleanup safety
-remain planned vertical slices. Review packets and the provenance packet are local review inputs;
+This is an early public foundation with worktree planning and creation. Command capture, resume,
+and cleanup safety remain planned. Review packets and provenance packets are local review inputs;
 they are not merge, deployment, or runtime verification claims.
 
 ## Provenance
