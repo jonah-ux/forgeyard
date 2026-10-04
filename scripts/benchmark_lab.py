@@ -108,6 +108,7 @@ def run_benchmark(iterations: int = 20, warmup: int = 3) -> dict[str, Any]:
         raise ValueError("iterations must be between 1 and 200")
     if warmup < 0 or warmup > 50:
         raise ValueError("warmup must be between 0 and 50")
+    latency_tracing_active = tracemalloc.is_tracing()
     reports, encoded = _load_fixture()
     with tempfile.TemporaryDirectory(prefix="forgeyard-lab-benchmark-") as directory:
         work = Path(directory)
@@ -174,6 +175,7 @@ def run_benchmark(iterations: int = 20, warmup: int = 3) -> dict[str, Any]:
         "runtime": {"python": platform.python_version(), "platform": platform.platform(),
                     "architecture": platform.machine(), "logical_cpus": os.cpu_count()},
         "measurement_protocol": {"latency": "perf_counter_ns/elapsed-ms",
+                                 "latency_tracing_active": latency_tracing_active,
                                  "memory": "separate-single-tracemalloc-peak-python-bytes",
                                  "operation_order": list(operations)},
         "iterations": iterations,

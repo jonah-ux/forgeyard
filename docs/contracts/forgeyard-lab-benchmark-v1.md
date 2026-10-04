@@ -27,7 +27,9 @@ If the caller already owns a tracing session, memory stays `unavailable` with
 `reason=caller_tracing_active`; the benchmark preserves that caller's state.
 
 `measurement_protocol` identifies the latency timer, separate memory method,
-and operation order. `runtime` records Python/platform, architecture, and the
+operation order, and whether caller tracing was active during latency sampling.
+Tracing can affect latency, so runs with different tracing states are not
+comparable. `runtime` records Python/platform, architecture, and the
 reported logical CPU count (or null when unavailable), without a hostname.
 
 For comparisons, save each JSON receipt. Treat its `schema`, `dataset.sha256`,
