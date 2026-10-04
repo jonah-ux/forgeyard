@@ -22,8 +22,9 @@ then re-reads a caller-supplied source root; it reports `freshness=matched` only
 source byte matches. Omitting the source root deliberately yields `freshness=unknown` and `ok=false`.
 This makes the packet portable for transport while keeping review admission fail-closed.
 
-The packet never executes commands, resumes work, merges code, or claims deployment. Worktree
-creation and future resume adapters remain separate planned boundaries.
+The packet never executes commands, resumes work, merges code, or claims deployment. The separate
+`plan-worktree` and `create-worktree` commands provide bounded checkout creation; resume adapters
+remain planned.
 
 
 ## Workbench
