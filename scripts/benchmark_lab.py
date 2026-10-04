@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import statistics
 import sys
 import tempfile
 import time
+import tracemalloc
 from typing import Any, Callable
 
 
@@ -40,7 +42,7 @@ def _p95(values: list[float]) -> float:
     return ordered[min(len(ordered) - 1, int((len(ordered) - 1) * 0.95))]
 
 
-def _measure(operation: Callable[[], Any], iterations: int, warmup: int) -> dict[str, float | int]:
+def _measure(operation: Callable[[], Any], iterations: int, warmup: int) -> dict[str, Any]:
     for _ in range(warmup):
         operation()
     samples: list[float] = []
@@ -48,12 +50,22 @@ def _measure(operation: Callable[[], Any], iterations: int, warmup: int) -> dict
         started = time.perf_counter_ns()
         operation()
         samples.append((time.perf_counter_ns() - started) / 1_000_000)
+    memory: dict[str, Any] = {"state": "unavailable", "reason": "caller_tracing_active"}
+    if not tracemalloc.is_tracing():
+        tracemalloc.start()
+        try:
+            operation()
+            _, peak = tracemalloc.get_traced_memory()
+            memory = {"state": "measured", "peak_python_bytes": peak, "samples": 1}
+        finally:
+            tracemalloc.stop()
     return {
         "samples": len(samples),
         "median_ms": round(statistics.median(samples), 3),
         "p95_ms": round(_p95(samples), 3),
         "min_ms": round(min(samples), 3),
         "max_ms": round(max(samples), 3),
+        "memory": memory,
     }
 
 
@@ -96,6 +108,7 @@ def run_benchmark(iterations: int = 20, warmup: int = 3) -> dict[str, Any]:
         raise ValueError("iterations must be between 1 and 200")
     if warmup < 0 or warmup > 50:
         raise ValueError("warmup must be between 0 and 50")
+    latency_tracing_active = tracemalloc.is_tracing()
     reports, encoded = _load_fixture()
     with tempfile.TemporaryDirectory(prefix="forgeyard-lab-benchmark-") as directory:
         work = Path(directory)
@@ -159,7 +172,12 @@ def run_benchmark(iterations: int = 20, warmup: int = 3) -> dict[str, Any]:
             "bytes": dataset_bytes,
             "sha256": hashlib.sha256(b"".join(encoded)).hexdigest(),
         },
-        "runtime": {"python": platform.python_version(), "platform": platform.platform()},
+        "runtime": {"python": platform.python_version(), "platform": platform.platform(),
+                    "architecture": platform.machine(), "logical_cpus": os.cpu_count()},
+        "measurement_protocol": {"latency": "perf_counter_ns/elapsed-ms",
+                                 "latency_tracing_active": latency_tracing_active,
+                                 "memory": "separate-single-tracemalloc-peak-python-bytes",
+                                 "operation_order": list(operations)},
         "iterations": iterations,
         "warmup": warmup,
         "operations": measurements,
@@ -167,6 +185,8 @@ def run_benchmark(iterations: int = 20, warmup: int = 3) -> dict[str, Any]:
         "result": "pass",
         "limits": [
             "timings are machine-local observations, not cross-machine rankings",
+            "memory is a separate Python allocation peak, not process RSS or native allocation accounting",
+            "memory is unavailable when the caller already owns an active tracing session",
             "the dataset is synthetic and does not measure provider, network, database, or model latency",
             "a passing benchmark does not claim deployment, adoption, or production readiness",
         ],

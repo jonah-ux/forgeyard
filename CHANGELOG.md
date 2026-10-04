@@ -9,6 +9,8 @@
 - Block the lab evaluation when requested artifact or installation checks fail;
   compare the fresh offline wheel consumer with the current native implementation.
 - Exercise wheel and source consumers outside the checkout during CI and release.
+- Record separate Python allocation peaks, environment/protocol metadata, and
+  virtual-environment creation/offline installation timings as local observations.
 
 ## Unreleased — Workbench review experience
 
