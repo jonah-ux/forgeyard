@@ -56,3 +56,7 @@ The synthetic compatibility corpus lives in [`conformance/`](../../conformance/)
 `python3 scripts/run_interop_conformance.py --json` to check valid, malformed, tampered, unknown
 version, unsafe path, bad hash, and non-reviewable status cases. The corpus is local evidence for
 protocol compatibility; it is not evidence of deployment or user-visible outcomes.
+
+Forgeyard's wider native protocol and capability declaration is documented in
+[`agent-systems-lab-owner-v1.md`](agent-systems-lab-owner-v1.md). It complements this fixture
+corpus and binds the declared protocol names to producer output exercised by source tests.
