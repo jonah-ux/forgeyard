@@ -97,10 +97,18 @@ and provenance-packet verification. The receipt is versioned as
 [`forgeyard-lab-benchmark/v1`](docs/contracts/forgeyard-lab-benchmark-v1.md) and keeps timing
 claims explicitly machine-local.
 
-For the broader P3 evaluation receipt, run [`scripts/evaluate_lab.py`](scripts/evaluate_lab.py).
-It combines correctness, the 15-class refusal matrix, machine-local measurements, and optional
-wheel/sdist/checksum and offline install observations. Missing artifacts remain `unavailable`;
-the evaluation contract is [`forgeyard-evaluation/v1`](docs/contracts/forgeyard-evaluation-v1.md).
+Run `forgeyard evaluate-refusals` from any installed package to execute 19 native contract cases,
+including a passing control. Each case records the actual admission or refusal outcome. The suite
+uses synthetic local inputs and checks Forgeyard's own boundaries; it does not test a specialist
+tool's policy, sandbox enforcement, provider, or production behavior.
+
+For the broader lab receipt, run [`scripts/evaluate_lab.py`](scripts/evaluate_lab.py).
+It combines the executed native cases, correctness, the static 15-class Workbench catalogue,
+machine-local measurements, and optional wheel/sdist/checksum and offline install observations.
+Omitted artifacts remain `unavailable`. Supplying `--dist-dir` makes artifact failure block the
+result; adding `--install` also requires a fresh offline wheel consumer to pass the native suite
+with matching implementation digests. The evaluation contract is
+[`forgeyard-evaluation/v1`](docs/contracts/forgeyard-evaluation-v1.md).
 
 For the public supply-chain and privacy surface, run [`scripts/audit_public_surface.py`](scripts/audit_public_surface.py).
 It inventories dependencies and license markers, checks release provenance files, scans tracked text

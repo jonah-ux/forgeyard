@@ -55,21 +55,29 @@ jobs:
           PY
       - name: Build distributions
         run: |
-          python -m pip install --upgrade build
+          python -m pip install --upgrade build pytest
+          python -m pip install -e .
+          python -m pytest -q
           python -m build --sdist --wheel
           (cd dist && sha256sum *.whl *.tar.gz > SHA256SUMS)
+          mkdir release-evidence
+          python scripts/evaluate_lab.py --iterations 3 --warmup 1 --dist-dir ./dist --install --json > release-evidence/evaluation.json
       - name: Verify wheel consumer
         run: |
-          python -m venv .release-wheel
-          .release-wheel/bin/python -m pip install dist/*.whl
-          .release-wheel/bin/forgeyard --version
-          .release-wheel/bin/forgeyard --help
+          python -m venv "${RUNNER_TEMP}/forgeyard-wheel-consumer"
+          "${RUNNER_TEMP}/forgeyard-wheel-consumer/bin/python" -m pip install --no-index --no-deps dist/*.whl
+          cd "${RUNNER_TEMP}"
+          env -u PYTHONPATH ./forgeyard-wheel-consumer/bin/python -I -c 'from pathlib import Path; import sys, forgeyard; assert Path(forgeyard.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())'
+          env -u PYTHONPATH ./forgeyard-wheel-consumer/bin/forgeyard --version
+          env -u PYTHONPATH ./forgeyard-wheel-consumer/bin/forgeyard evaluate-refusals > "${GITHUB_WORKSPACE}/release-evidence/wheel-runtime.json"
       - name: Verify source consumer
         run: |
-          python -m venv .release-sdist
-          .release-sdist/bin/python -m pip install dist/*.tar.gz
-          .release-sdist/bin/forgeyard --version
-          .release-sdist/bin/forgeyard --help
+          python -m venv "${RUNNER_TEMP}/forgeyard-source-consumer"
+          "${RUNNER_TEMP}/forgeyard-source-consumer/bin/python" -m pip install --no-deps dist/*.tar.gz
+          cd "${RUNNER_TEMP}"
+          env -u PYTHONPATH ./forgeyard-source-consumer/bin/python -I -c 'from pathlib import Path; import sys, forgeyard; assert Path(forgeyard.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())'
+          env -u PYTHONPATH ./forgeyard-source-consumer/bin/forgeyard --version
+          env -u PYTHONPATH ./forgeyard-source-consumer/bin/forgeyard evaluate-refusals > "${GITHUB_WORKSPACE}/release-evidence/sdist-runtime.json"
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
         with:
@@ -87,7 +95,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ inputs.release_tag || github.ref_name }}" dist/* \
+          gh release create "${{ inputs.release_tag || github.ref_name }}" dist/* release-evidence/*.json \
             --repo "${{ github.repository }}" \
             --verify-tag \
             --title "${{ github.repository }} ${{ github.ref_name }}" \

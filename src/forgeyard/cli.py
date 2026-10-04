@@ -62,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--revision", required=True)
     review.add_argument("--path", action="append", required=True, dest="changed_paths")
     sub.add_parser("demo", help="run the offline evidence-to-review walkthrough")
+    sub.add_parser("evaluate-refusals", help="execute the offline native contract evaluation")
     receipt = sub.add_parser("receipt", help="write one source-bound evidence receipt")
     receipt.add_argument("record", type=Path)
     receipt.add_argument("--name", required=True)
@@ -99,6 +100,11 @@ def parse_evidence(raw: str) -> Evidence:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "evaluate-refusals":
+        from .evaluation import run_refusal_evaluation
+        report = run_refusal_evaluation()
+        print(json.dumps(report, sort_keys=True))
+        return 0 if report["result"] == "pass" else 2
     if args.command == "compose":
         record = TaskRecord(args.task_id, args.repository, args.request)
         try:
