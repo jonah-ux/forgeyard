@@ -18,4 +18,20 @@ def test_lab_benchmark_has_fixed_dataset_and_bounded_operations():
     assert receipt["dataset"]["bytes"] > 0
     assert set(receipt["operations"]) == {"parse", "validate", "index", "replay", "compose", "packet_verify"}
     assert all(operation["samples"] == 2 for operation in receipt["operations"].values())
+    assert all(operation["memory"]["state"] == "measured" and operation["memory"]["peak_python_bytes"] >= 0
+               for operation in receipt["operations"].values())
+    assert receipt["runtime"]["architecture"]
+    assert receipt["measurement_protocol"]["operation_order"] == list(receipt["operations"])
     assert receipt["guards"] == {"reviewable": True, "packet_ok": True, "private_payloads_exported": False}
+
+
+def test_memory_measurement_preserves_a_callers_tracing_session(monkeypatch):
+    module = _module()
+    monkeypatch.setattr(module.tracemalloc, "is_tracing", lambda: True)
+    def forbidden():
+        raise AssertionError("must not start or stop caller tracing")
+    monkeypatch.setattr(module.tracemalloc, "start", forbidden)
+    monkeypatch.setattr(module.tracemalloc, "stop", forbidden)
+    result = module._measure(lambda: bytearray(4096), iterations=1, warmup=0)
+    assert result["samples"] == 1
+    assert result["memory"] == {"state": "unavailable", "reason": "caller_tracing_active"}

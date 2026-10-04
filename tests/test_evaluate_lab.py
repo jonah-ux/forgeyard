@@ -18,6 +18,8 @@ def test_evaluation_distinguishes_pass_measurement_and_unavailable_inputs():
     assert report["observations"]["correctness"]["state"] == "pass"
     assert report["observations"]["refusal"]["state"] == "pass"
     assert report["observations"]["performance"]["state"] == "measured"
+    assert report["observations"]["performance"]["environment"]["architecture"]
+    assert report["observations"]["performance"]["protocol"]["memory"] == "separate-single-tracemalloc-peak-python-bytes"
     assert report["observations"]["artifact"]["state"] == "unavailable"
     assert report["observations"]["install"]["state"] == "unavailable"
     assert report["observations"]["refusal"]["unique_threats"] == 15

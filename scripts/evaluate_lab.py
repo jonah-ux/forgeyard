@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any
 
 
@@ -141,10 +142,13 @@ def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], instal
         environment = os.environ.copy()
         environment.pop("PYTHONPATH", None)
         try:
+            started = time.perf_counter_ns()
             create = subprocess.run([sys.executable, "-m", "venv", str(venv)], capture_output=True, text=True, check=False, timeout=60)
+            venv_elapsed_ms = (time.perf_counter_ns() - started) / 1_000_000
             if create.returncode != 0:
                 return {"state": "blocked", "reason": "venv_creation_failed", "exit_code": create.returncode}
             python = venv / "bin" / "python"
+            started = time.perf_counter_ns()
             result = subprocess.run(
                 [str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel_path)],
                 capture_output=True,
@@ -154,6 +158,7 @@ def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], instal
                 env=environment,
                 timeout=90,
             )
+            install_elapsed_ms = (time.perf_counter_ns() - started) / 1_000_000
             if result.returncode != 0:
                 return {"state": "blocked", "reason": "offline_install_failed", "exit_code": result.returncode}
             identity = subprocess.run(
@@ -183,6 +188,8 @@ def _install_observation(dist_dir: Path | None, artifact: dict[str, Any], instal
         "installed_origin_verified": identity.returncode == 0,
         "runtime_exit_code": runtime.returncode,
         "runtime_evaluation": receipt if runtime_ok else None,
+        "venv_elapsed_ms": round(venv_elapsed_ms, 3),
+        "install_elapsed_ms": round(install_elapsed_ms, 3),
     }
 
 
@@ -197,6 +204,10 @@ def evaluate(iterations: int = 5, warmup: int = 1, dist_dir: Path | None = None,
         "performance": {
             "state": "measured" if benchmark else "unavailable",
             "operations": benchmark.get("operations", {}) if benchmark else {},
+            "environment": benchmark.get("runtime", {}) if benchmark else {},
+            "protocol": benchmark.get("measurement_protocol", {}) if benchmark else {},
+            "iterations": benchmark.get("iterations") if benchmark else None,
+            "warmup": benchmark.get("warmup") if benchmark else None,
         },
         "artifact": artifact,
         "install": install_result,

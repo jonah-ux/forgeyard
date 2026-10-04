@@ -45,6 +45,14 @@ manifest validator. This checks bytes against the supplied checksum manifest;
 it does not authenticate that manifest. Use the release provenance workflow for
 authenticated build attribution. Installation processes have explicit timeouts.
 
+Performance retains the benchmark's environment, protocol, iteration/warmup
+counts, latency distribution, and separate Python allocation peak per operation.
+Artifact entries record byte sizes. A completed installation observation also
+records `venv_elapsed_ms` and `install_elapsed_ms`: separate monotonic wall times
+for environment creation and the offline pip wheel-install command. Those times
+exclude the later import-origin, version, and native-suite checks. They are one
+sample on that machine, not a universal installation-speed claim.
+
 The receipt carries the source revision and dataset hashes. It never converts
 an unavailable artifact or install observation into a pass, and it never treats
 local timing as a cross-machine ranking. The fixtures are synthetic and do not
