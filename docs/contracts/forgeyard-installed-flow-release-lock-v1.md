@@ -15,7 +15,9 @@ Proof v0.4.1, and Forgeyard v0.5.0 are prereleases. The fresh consumer
 observation used public-main editable installs under Python 3.14, while the
 published wheel and sdist hashes are locked independently. Keeping those two
 facts separate prevents a source checkout from being presented as artifact
-consumer proof.
+consumer proof. The observation also records the exact four public-main
+revisions used for that run, so a reviewer can distinguish it from a later
+checkout or release tag.
 
 This lock covers the installed reference path only. It does not claim that the
 remaining Agent Systems Lab owners share a release channel, that the packages
