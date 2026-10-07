@@ -23,6 +23,9 @@ class InstalledFlowReleaseLockTests(unittest.TestCase):
                 self.assertRegex(artifact["sha256"], r"^[0-9a-f]{64}$")
         self.assertEqual(payload["observation"]["source_mode"], "public-main-editable")
         self.assertEqual(payload["observation"]["runtime"], "python-3.14")
+        self.assertEqual(set(payload["observation"]["revisions"]), {"chatlens", "atlas-agent-runtime", "agent-proof", "forgeyard"})
+        for revision in payload["observation"]["revisions"].values():
+            self.assertRegex(revision, r"^[0-9a-f]{40}$")
         self.assertEqual(set(payload["observation"]["outcomes"]), {"reviewable", "blocked", "tampered-digest-refused"})
 
 

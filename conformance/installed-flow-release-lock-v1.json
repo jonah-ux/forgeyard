@@ -78,6 +78,12 @@
   "observation": {
     "source_mode": "public-main-editable",
     "runtime": "python-3.14",
+    "revisions": {
+      "chatlens": "8dc99a5f526371fdd5b6ca92d516cdde7c9a36f7",
+      "atlas-agent-runtime": "6678ded3ccce377d90aabe69647b561acae6b1b1",
+      "agent-proof": "de534b327f23b48d2b4e635525a258be85e5678f",
+      "forgeyard": "63f9aef6840feef95a2da06b14f01ba26ebd695c"
+    },
     "versions": {"chatlens": "0.4.0", "atlas": "0.2.0", "agent-proof": "0.4.1", "forgeyard": "0.5.0"},
     "outcomes": ["reviewable", "blocked", "tampered-digest-refused"],
     "observed_at": "2026-10-03",
